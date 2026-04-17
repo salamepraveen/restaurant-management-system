@@ -1,0 +1,19 @@
+package com.prav.user.dto;
+import jakarta.validation.constraints.*;
+
+public class PromoteRequestDTO {
+
+    @NotBlank(message = "Role is required")
+    @Pattern(regexp = "STAFF|ADMIN", message = "Role must be STAFF or ADMIN")
+    private String role;
+
+	public String getRole() {
+		return role;
+	}
+
+	public void setRole(String role) {
+		this.role = role;
+	}
+
+   
+}

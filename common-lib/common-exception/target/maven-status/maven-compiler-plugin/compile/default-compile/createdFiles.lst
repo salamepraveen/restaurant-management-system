@@ -1,0 +1,7 @@
+com\prav\common\exception\ServiceException.class
+com\prav\common\exception\UnauthorizedException.class
+com\prav\common\exception\BaseGlobalExceptionHandler.class
+com\prav\common\exception\BadRequestException.class
+com\prav\common\exception\ConflictException.class
+com\prav\common\exception\ForbiddenException.class
+com\prav\common\exception\ResourceNotFoundException.class

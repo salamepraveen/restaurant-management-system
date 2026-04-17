@@ -1,0 +1,4 @@
+com\prav\gateway\config\SecurityConfig.class
+com\prav\gateway\config\CorsConfig.class
+com\prav\gateway\GatewayApplication.class
+com\prav\gateway\filter\JwtFilter2.class

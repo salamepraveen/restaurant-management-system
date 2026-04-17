@@ -1,0 +1,31 @@
+package com.prav.auth.client;
+
+import org.springframework.cloud.openfeign.FallbackFactory;
+import org.springframework.stereotype.Component;
+
+import com.prav.auth.dto.UserDTO;
+
+@Component
+public class UserClientFallbackFactory implements FallbackFactory<UserClient> {
+
+    @Override
+    public UserClient create(Throwable cause) {
+        return new UserClient() {
+
+            @Override
+            public UserDTO createUser(UserDTO user) {
+                throw new RuntimeException("User Service is unavailable: " + cause.getMessage());
+            }
+
+            @Override
+            public UserDTO getUserByUsername(String username) {
+                throw new RuntimeException("User Service is unavailable: " + cause.getMessage());
+            }
+
+            @Override
+            public UserDTO getUserByEmail(String email) {
+                throw new RuntimeException("User Service is unavailable: " + cause.getMessage());
+            }
+        };
+    }
+}

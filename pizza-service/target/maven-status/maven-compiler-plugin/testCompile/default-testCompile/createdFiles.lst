@@ -1,0 +1,7 @@
+com\prav\pizza\dto\DTOValidationTest.class
+com\prav\pizza\controller\PizzaControllerTest.class
+com\prav\pizza\PizzaServiceApplicationTests.class
+com\prav\pizza\service\PizzaServiceTest.class
+com\prav\pizza\aspect\ApiLoggingAspect.class
+com\prav\pizza\PizzaRepositoryTest.class
+com\prav\pizza\dto\ToppingDTOValidationTest.class
