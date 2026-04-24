@@ -67,6 +67,35 @@ public class AuthService {
 
         return buildAuthResponse(createdUser, token);
     }
+    
+    // ==================== SIGNUP (Direct, without OTP) ====================
+    
+    public AuthResponse signupDirect(AuthRequest req) {
+    	// Check if username already exists
+        try {
+            userClient.getUserByUsername(req.getUsername());
+            throw new ConflictException("Username already taken: " + req.getUsername());
+        } catch (ConflictException e) {
+            throw e;
+        } catch (Exception e) {
+            // 404 means user doesn't exist — good
+            if (e.getMessage() == null || !e.getMessage().contains("404")) {
+                throw new RuntimeException("Error checking username: " + e.getMessage(), e);
+            }
+        }
+        
+        // Create user via user-service
+        UserDTO user = new UserDTO();
+        user.setUsername(req.getUsername());
+        user.setPassword(encoder.encode(req.getPassword()));
+        user.setEmail(req.getEmail());
+        UserDTO createdUser = userClient.createUser(user);
+
+        // Generate token
+        String token = jwtUtil.generateToken(createdUser);
+
+        return buildAuthResponse(createdUser, token);
+    }
 
     // ==================== SIGNIN — Username + Password ====================
 

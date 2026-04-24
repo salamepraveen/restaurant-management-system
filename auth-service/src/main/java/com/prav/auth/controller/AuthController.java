@@ -41,6 +41,17 @@ public class AuthController {
                         .build());
     }
 
+    @PostMapping("/signup/direct")
+    public ResponseEntity<ApiResponse<AuthResponse>> signupDirect(@Valid @RequestBody AuthRequest req) {
+        AuthResponse response = service.signupDirect(req);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.<AuthResponse>builder()
+                        .success(true)
+                        .message("Account created successfully")
+                        .data(response)
+                        .build());
+    }
+
     // ==================== SIGNIN — Password ====================
 
     @PostMapping("/signin")
