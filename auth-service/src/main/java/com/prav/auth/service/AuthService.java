@@ -71,7 +71,12 @@ public class AuthService {
     // ==================== SIGNIN — Username + Password ====================
 
     public AuthResponse signin(AuthRequest req) {
-        UserDTO user = userClient.getUserByUsername(req.getUsername());
+        UserDTO user;
+        try {
+            user = userClient.getUserByUsername(req.getUsername());
+        } catch (Exception e) {
+            throw new InvalidCredentialsException("Invalid credentials");
+        }
 
         if (!encoder.matches(req.getPassword(), user.getPassword())) {
             throw new InvalidCredentialsException("Invalid credentials");
@@ -104,9 +109,12 @@ public class AuthService {
         // Verify OTP
         otpService.verifyLoginOtp(req.getEmail(), req.getOtp());
 
-        // Get user by email — need to find user somehow
-       
-        UserDTO user = userClient.getUserByEmail(req.getEmail());
+        UserDTO user;
+        try {
+             user = userClient.getUserByEmail(req.getEmail());
+        } catch (Exception e) {
+             throw new InvalidCredentialsException("Invalid credentials");
+        }
 
         String token = jwtUtil.generateToken(user);
         return buildAuthResponse(user, token);

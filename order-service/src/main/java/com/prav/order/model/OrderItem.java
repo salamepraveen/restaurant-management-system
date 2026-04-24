@@ -36,4 +36,7 @@ public class OrderItem {
 
     @Column(nullable = false)
     private Double price;
+
+    @Column(name = "toppings")
+    private String toppings;
 }

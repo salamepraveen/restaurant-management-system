@@ -52,6 +52,9 @@ public class OrderServiceImpl implements OrderService {
         for (Map<String, Object> itemMap : items) {
             Long pizzaId = ((Number) itemMap.get("pizzaId")).longValue();
             int quantity = ((Number) itemMap.get("quantity")).intValue();
+            String size = itemMap.get("size") != null ? itemMap.get("size").toString() : "REGULAR";
+            List<String> toppingsList = (List<String>) itemMap.get("toppings");
+            String toppingsStr = toppingsList != null ? String.join(", ", toppingsList) : "";
 
             Map<String, Object> pizzaData = pizzaClient.getPizzaById(pizzaId);
             Object availableObj = pizzaData.get("available");
@@ -61,17 +64,39 @@ public class OrderServiceImpl implements OrderService {
                 throw new BadRequestException("Pizza '" + pizzaData.get("name") + "' is currently not available!");
             }
 
-            double price = ((Number) pizzaData.get("price")).doubleValue();
+            Number basePriceNum = (Number) pizzaData.get("basePrice");
+            if (basePriceNum == null) basePriceNum = (Number) pizzaData.get("price"); // Fallback
+            double basePrice = basePriceNum != null ? basePriceNum.doubleValue() : 0.0;
             String pizzaName = (String) pizzaData.get("name");
+            
+            double multiplier = 1.0;
+            if ("LARGE".equalsIgnoreCase(size)) multiplier = 2.0;
+            else if ("MEDIUM".equalsIgnoreCase(size)) multiplier = 1.5;
+            
+            double toppingsPrice = 0.0;
+            if (toppingsList != null && pizzaData.get("toppings") != null) {
+                List<Map<String, Object>> pizzaToppings = (List<Map<String, Object>>) pizzaData.get("toppings");
+                for (String tName : toppingsList) {
+                    for (Map<String, Object> pt : pizzaToppings) {
+                        if (tName.equalsIgnoreCase((String) pt.get("name"))) {
+                            toppingsPrice += pt.get("price") != null ? ((Number) pt.get("price")).doubleValue() : 50.0;
+                            break;
+                        }
+                    }
+                }
+            }
+            double finalPrice = (basePrice * multiplier) + toppingsPrice;
 
             OrderItem orderItem = new OrderItem();
             orderItem.setPizzaId(pizzaId);
             orderItem.setPizzaName(pizzaName);
             orderItem.setQuantity(quantity);
-            orderItem.setPrice(price);
+            orderItem.setPrice(finalPrice);
+            orderItem.setSize(size);
+            orderItem.setToppings(toppingsStr);
 
             orderItems.add(orderItem);
-            totalAmount = totalAmount.add(BigDecimal.valueOf(price * quantity));
+            totalAmount = totalAmount.add(BigDecimal.valueOf(finalPrice * quantity));
         }
 
         Order order = new Order();
@@ -122,6 +147,7 @@ public class OrderServiceImpl implements OrderService {
                         .size(item.getSize())
                         .quantity(item.getQuantity())
                         .price(item.getPrice())
+                        .toppings(item.getToppings())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -338,6 +364,7 @@ public class OrderServiceImpl implements OrderService {
                             .size(item.getSize())
                             .quantity(item.getQuantity())
                             .price(item.getPrice())
+                            .toppings(item.getToppings())
                             .build())
                     .collect(Collectors.toList());
         }

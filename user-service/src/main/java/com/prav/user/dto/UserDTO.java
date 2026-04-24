@@ -23,6 +23,8 @@ public class UserDTO {
 	private String role;
     private Long assignedRestaurantId;
     private List<Long> knownRestaurantIds;
+    private String phoneNumber;
+    private String address;
 	public Long getId() {
 		return id;
 	}
@@ -60,5 +62,19 @@ public class UserDTO {
 		this.knownRestaurantIds = knownRestaurantIds;
 	}
 
-    
+	public String getPhoneNumber() {
+		return phoneNumber;
+	}
+
+	public void setPhoneNumber(String phoneNumber) {
+		this.phoneNumber = phoneNumber;
+	}
+
+	public String getAddress() {
+		return address;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
+	}
 }

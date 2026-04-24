@@ -5,7 +5,7 @@ spring:
     name: USER-SERVICE
 
   datasource:
-    url: jdbc:mysql://localhost:3306/pizza_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/user_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password: praveen@123
     driver-class-name: com.mysql.cj.jdbc.Driver

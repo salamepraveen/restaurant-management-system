@@ -84,6 +84,23 @@ public class UserService {
         return userRepo.save(user);
     }
 
+    public User updateProfile(Long userId, String email, String phoneNumber, String address) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        if (email != null && !email.trim().isEmpty()) {
+            user.setEmail(email);
+        }
+        if (phoneNumber != null) {
+            user.setPhoneNumber(phoneNumber);
+        }
+        if (address != null) {
+            user.setAddress(address);
+        }
+        
+        return userRepo.save(user);
+    }
+
     
     private List<Long> getAllRestaurantIds() {
         List<Long> ids = new ArrayList<>();

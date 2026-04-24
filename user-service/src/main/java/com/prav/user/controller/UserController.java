@@ -93,6 +93,8 @@ public class UserController {
 
         Restaurant restaurant = new Restaurant();
         restaurant.setName(request.getName());
+        restaurant.setCity(request.getCity());
+        restaurant.setAddress(request.getAddress());
         restaurant.setOwnerId(userId);
         Restaurant saved = restaurantRepo.save(restaurant);
 
@@ -217,6 +219,22 @@ public class UserController {
                         .build());
     }
 
+    // ==================== USER — Update Profile ====================
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<UserDTO>> updateProfile(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestBody UserDTO request) {
+        
+        User updatedUser = service.updateProfile(userId, request.getEmail(), request.getPhoneNumber(), request.getAddress());
+        
+        return ResponseEntity.ok(
+                ApiResponse.<UserDTO>builder()
+                        .success(true)
+                        .message("Profile updated successfully")
+                        .data(convertToDTO(updatedUser))
+                        .build());
+    }
+
     // ==================== Helper ====================
 
     private UserDTO convertToDTO(User user) {
@@ -228,6 +246,8 @@ public class UserController {
         dto.setRole(user.getRole());
         dto.setAssignedRestaurantId(user.getAssignedRestaurantId());
         dto.setKnownRestaurantIds(user.getKnownRestaurantIds());
+        dto.setPhoneNumber(user.getPhoneNumber());
+        dto.setAddress(user.getAddress());
         return dto;
     }
 }

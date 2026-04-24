@@ -6,7 +6,7 @@ spring:
     name: AUTH_SERVICE # Recommended to use lowercase-kebab-case for service names
 
   datasource:
-    url: jdbc:mysql://localhost:3306/pizza_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/auth_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password: praveen@123
     driver-class-name: com.mysql.cj.jdbc.Driver

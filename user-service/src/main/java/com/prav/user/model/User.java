@@ -24,6 +24,10 @@ public class User {
 
     private Long assignedRestaurantId;
 
+    private String phoneNumber;
+    
+    private String address;
+
     @ElementCollection
     @CollectionTable(name = "user_known_restaurants",
             joinColumns = @JoinColumn(name = "user_id"))
@@ -86,5 +90,19 @@ public class User {
 		this.knownRestaurantIds = knownRestaurantIds;
 	}
 
-   
+	public String getPhoneNumber() {
+		return phoneNumber;
+	}
+
+	public void setPhoneNumber(String phoneNumber) {
+		this.phoneNumber = phoneNumber;
+	}
+
+	public String getAddress() {
+		return address;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
+	}
 }

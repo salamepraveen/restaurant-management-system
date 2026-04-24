@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.prav.auth.dto.UserDTO;
 
-@FeignClient(name = "USER-SERVICE", url = "http://localhost:8081", fallbackFactory = UserClientFallbackFactory.class)
+@FeignClient(name = "USER-SERVICE", fallbackFactory = UserClientFallbackFactory.class)
 public interface UserClient {
 
     @PostMapping("/users/internal")
