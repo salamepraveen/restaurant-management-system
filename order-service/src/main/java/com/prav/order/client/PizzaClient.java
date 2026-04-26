@@ -11,4 +11,7 @@ public interface PizzaClient {
 
 	@GetMapping("/pizzas/internal/{id}")
     Map<String, Object> getPizzaById(@PathVariable Long id);
+
+    @GetMapping("/pizzas/toppings")
+    Map<String, Object> getAllToppings();
 }

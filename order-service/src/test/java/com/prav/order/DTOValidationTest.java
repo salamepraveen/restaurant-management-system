@@ -27,6 +27,8 @@ public class DTOValidationTest {
     void validOrderRequest_noErrors() {
         OrderRequestDTO dto = new OrderRequestDTO();
         dto.setRestaurantId(1L);
+        dto.setDeliveryAddress("123 Main St");
+        dto.setPaymentMethod("CARD");
 
         OrderItemDTO item = new OrderItemDTO();
         item.setPizzaId(1L);

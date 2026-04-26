@@ -49,6 +49,8 @@ class UserServiceTest {
         restaurant2 = new Restaurant();
         restaurant2.setId(20L);
         restaurant2.setName("Burger King");
+
+        lenient().when(userRepo.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
     }
 
     // ==================== createUser ====================

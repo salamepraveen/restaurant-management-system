@@ -1,5 +1,6 @@
 package com.prav.auth.service;
 
+import com.prav.common.exception.ConflictException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,11 +41,13 @@ public class OtpService {
         try {
             Object existing = userClient.getUserByEmail(email);
             if (existing != null) {
-                throw new RuntimeException("Email already registered: " + email);
+                throw new ConflictException("Email already registered: " + email);
             }
+        } catch (ConflictException e) {
+            throw e;
         } catch (Exception e) {
             // 404 means email not found — that's good, proceed
-            if (!e.getMessage().contains("404") && !e.getMessage().contains("Not Found")) {
+            if (e.getMessage() != null && !e.getMessage().contains("404") && !e.getMessage().contains("Not Found")) {
                 // user-service might be down, log warning but allow signup
                 System.out.println("  [WARN] Could not check duplicate email (user-service may be down): " + e.getMessage());
             }

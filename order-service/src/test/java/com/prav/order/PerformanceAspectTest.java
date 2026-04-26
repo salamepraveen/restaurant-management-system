@@ -31,13 +31,13 @@ public class PerformanceAspectTest {
 
     @BeforeEach
     void setUp() {
-        when(joinPoint.getSignature()).thenReturn(signature);
+        lenient().when(joinPoint.getSignature()).thenReturn(signature);
     }
 
     @Test
     void fastQuery_returnsResult() throws Throwable {
-        when(signature.getName()).thenReturn("findByUserId");
-        when(joinPoint.getTarget()).thenReturn(new Object());
+        lenient().when(signature.getName()).thenReturn("findByUserId");
+        lenient().when(joinPoint.getTarget()).thenReturn(new Object());
         List<Object> expectedResult = new ArrayList<>();
         when(joinPoint.proceed()).thenReturn(expectedResult);
 
@@ -49,8 +49,8 @@ public class PerformanceAspectTest {
 
     @Test
     void slowQuery_logsWarning() throws Throwable {
-        when(signature.getName()).thenReturn("findByRestaurantId");
-        when(joinPoint.getTarget()).thenReturn(new Object());
+        lenient().when(signature.getName()).thenReturn("findByRestaurantId");
+        lenient().when(joinPoint.getTarget()).thenReturn(new Object());
 
         when(joinPoint.proceed()).thenAnswer(invocation -> {
             Thread.sleep(600);
@@ -65,8 +65,8 @@ public class PerformanceAspectTest {
 
     @Test
     void queryThrowsException_rethrows() throws Throwable {
-        when(signature.getName()).thenReturn("findById");
-        when(joinPoint.getTarget()).thenReturn(new Object());
+        lenient().when(signature.getName()).thenReturn("findById");
+        lenient().when(joinPoint.getTarget()).thenReturn(new Object());
         when(joinPoint.proceed()).thenThrow(new RuntimeException("Connection timeout"));
 
         assertThrows(RuntimeException.class, () -> performanceAspect.monitorDatabaseQueries(joinPoint));

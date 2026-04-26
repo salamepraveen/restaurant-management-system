@@ -23,6 +23,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import org.springframework.test.util.ReflectionTestUtils;
+
 @ExtendWith(MockitoExtension.class)
 public class OrderServiceApplicationTests {
 
@@ -62,6 +64,7 @@ public class OrderServiceApplicationTests {
         when(orderRepo.save(any(Order.class))).thenAnswer(inv -> {
             Order o = inv.getArgument(0);
             o.setId(1L);
+            o.setStatus(Order.OrderStatus.PLACED);
             return o;
         });
 
@@ -81,7 +84,7 @@ public class OrderServiceApplicationTests {
         item.put("pizzaId", 10L);
         item.put("quantity", 2);
 
-        OrderResponseDTO result = orderService.placeOrder(1L, 2L, List.of(item));
+        OrderResponseDTO result = orderService.placeOrder(1L, 2L, "123 Main St", "CARD", List.of(item));
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
@@ -104,7 +107,7 @@ public class OrderServiceApplicationTests {
         item.put("pizzaId", 10L);
         item.put("quantity", 1);
 
-        assertThrows(RuntimeException.class, () -> orderService.placeOrder(1L, 2L, List.of(item)));
+        assertThrows(RuntimeException.class, () -> orderService.placeOrder(1L, 2L, "123 Main St", "CARD", List.of(item)));
         verify(orderRepo, never()).save(any());
     }
 
@@ -113,10 +116,11 @@ public class OrderServiceApplicationTests {
         when(orderRepo.save(any(Order.class))).thenAnswer(inv -> {
             Order o = inv.getArgument(0);
             o.setId(1L);
+            o.setStatus(Order.OrderStatus.PLACED);
             return o;
         });
 
-        OrderResponseDTO result = orderService.placeOrder(1L, 2L, Collections.emptyList());
+        OrderResponseDTO result = orderService.placeOrder(1L, 2L, "123 Main St", "CARD", Collections.emptyList());
 
         assertNotNull(result);
         assertEquals(BigDecimal.ZERO, result.getTotalAmount());
@@ -129,6 +133,7 @@ public class OrderServiceApplicationTests {
         when(orderRepo.save(any(Order.class))).thenAnswer(inv -> {
             Order o = inv.getArgument(0);
             o.setId(5L);
+            o.setStatus(Order.OrderStatus.PLACED);
             return o;
         });
 
@@ -152,7 +157,7 @@ public class OrderServiceApplicationTests {
         item2.put("pizzaId", 2L);
         item2.put("quantity", 1);
 
-        OrderResponseDTO result = orderService.placeOrder(1L, 2L, List.of(item1, item2));
+        OrderResponseDTO result = orderService.placeOrder(1L, 2L, "123 Main St", "CARD", List.of(item1, item2));
 
         assertNotNull(result);
         assertEquals(35.0, result.getTotalAmount().doubleValue(), 0.01);
@@ -377,5 +382,153 @@ public class OrderServiceApplicationTests {
         when(orderRepo.findById(1L)).thenReturn(Optional.of(order));
 
         assertThrows(RuntimeException.class, () -> orderService.cancelOrder(1L, 1L, "Too late"));
+    }
+
+    // ==================== PAYMENT TESTS ====================
+
+    @Test
+    void testCreatePaymentOrder_DummyMode() {
+        ReflectionTestUtils.setField(orderService, "paymentMode", "dummy");
+        when(orderRepo.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepo.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        PaymentOrderResponseDTO response = orderService.createPaymentOrder(1L);
+
+        assertNotNull(response);
+        assertEquals("INR", response.getCurrency());
+        assertTrue(response.getRazorpayOrderId().startsWith("order_dummy_"));
+    }
+
+    @Test
+    void testCreatePaymentOrder_RealMode() {
+        ReflectionTestUtils.setField(orderService, "paymentMode", "real");
+        when(orderRepo.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepo.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(paymentService.getKeyId()).thenReturn("rzp_test_key");
+
+        com.razorpay.Order rzpOrder = mock(com.razorpay.Order.class);
+        when(rzpOrder.get("id")).thenReturn("order_rzp_123");
+        when(rzpOrder.get("status")).thenReturn("created");
+        when(paymentService.createRazorpayOrder(anyLong(), any(BigDecimal.class))).thenReturn(rzpOrder);
+
+        PaymentOrderResponseDTO response = orderService.createPaymentOrder(1L);
+
+        assertNotNull(response);
+        assertEquals("order_rzp_123", response.getRazorpayOrderId());
+        assertEquals("rzp_test_key", response.getKey());
+    }
+
+    @Test
+    void testVerifyPayment_DummyMode() {
+        ReflectionTestUtils.setField(orderService, "paymentMode", "dummy");
+        when(orderRepo.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepo.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        PaymentVerifyRequestDTO req = new PaymentVerifyRequestDTO();
+        OrderResponseDTO response = orderService.verifyPayment(1L, req);
+
+        assertEquals(Order.OrderStatus.CONFIRMED, response.getStatus());
+        assertEquals(Order.PaymentStatus.COMPLETED, response.getPaymentStatus());
+    }
+
+    @Test
+    void testVerifyPayment_RealMode_Success() {
+        ReflectionTestUtils.setField(orderService, "paymentMode", "real");
+        when(orderRepo.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepo.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        PaymentVerifyRequestDTO req = new PaymentVerifyRequestDTO();
+        req.setRazorpayOrderId("order_rzp_123");
+        req.setRazorpayPaymentId("pay_rzp_123");
+        req.setRazorpaySignature("sig_rzp_123");
+
+        when(paymentService.verifyPayment(anyString(), anyString(), anyString())).thenReturn(true);
+
+        OrderResponseDTO response = orderService.verifyPayment(1L, req);
+
+        assertEquals(Order.OrderStatus.CONFIRMED, response.getStatus());
+        assertEquals(Order.PaymentStatus.COMPLETED, response.getPaymentStatus());
+    }
+
+    @Test
+    void testVerifyPayment_RealMode_Fail() {
+        ReflectionTestUtils.setField(orderService, "paymentMode", "real");
+        when(orderRepo.findById(1L)).thenReturn(Optional.of(order));
+
+        PaymentVerifyRequestDTO req = new PaymentVerifyRequestDTO();
+        req.setRazorpayOrderId("order_rzp_123");
+        req.setRazorpayPaymentId("pay_rzp_123");
+        req.setRazorpaySignature("sig_rzp_123");
+
+        when(paymentService.verifyPayment(anyString(), anyString(), anyString())).thenReturn(false);
+
+        assertThrows(RuntimeException.class, () -> orderService.verifyPayment(1L, req));
+    }
+
+    @Test
+    void testCancelOrder_DummyModeRefund() {
+        ReflectionTestUtils.setField(orderService, "paymentMode", "dummy");
+        order.setPaymentStatus(Order.PaymentStatus.COMPLETED);
+        order.setRazorpayPaymentId("pay_dummy_123");
+        when(orderRepo.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepo.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        OrderResponseDTO result = orderService.cancelOrder(1L, 1L, "Cancel test");
+
+        assertEquals(Order.OrderStatus.CANCELLED, result.getStatus());
+        assertEquals(Order.PaymentStatus.PARTIALLY_REFUNDED, result.getPaymentStatus());
+        assertNotNull(result.getRefundId());
+    }
+
+    @Test
+    void testPlaceOrder_WithSizeAndToppings() {
+        when(orderRepo.save(any(Order.class))).thenAnswer(inv -> {
+            Order o = inv.getArgument(0);
+            o.setId(1L);
+            o.setStatus(Order.OrderStatus.PLACED);
+            return o;
+        });
+
+        Map<String, Object> pizzaMap = new HashMap<>();
+        pizzaMap.put("name", "Margherita");
+        pizzaMap.put("basePrice", 10.0);
+        pizzaMap.put("available", true);
+        
+        List<Map<String, Object>> sizes = new ArrayList<>();
+        Map<String, Object> sizeMap = new HashMap<>();
+        sizeMap.put("size", "LARGE");
+        sizeMap.put("price", 5.0);
+        sizes.add(sizeMap);
+        pizzaMap.put("sizes", sizes);
+        
+        when(pizzaClient.getPizzaById(10L)).thenReturn(pizzaMap);
+        
+        Map<String, Object> allToppings = new HashMap<>();
+        List<Map<String, Object>> toppingsList = new ArrayList<>();
+        Map<String, Object> topMap = new HashMap<>();
+        topMap.put("name", "Extra Cheese");
+        topMap.put("price", 2.0);
+        toppingsList.add(topMap);
+        allToppings.put("data", toppingsList);
+        
+        when(pizzaClient.getAllToppings()).thenReturn(allToppings);
+
+        when(orderItemRepo.save(any(OrderItem.class))).thenAnswer(inv -> {
+            OrderItem item = inv.getArgument(0);
+            item.setId(1L);
+            return item;
+        });
+
+        Map<String, Object> item = new HashMap<>();
+        item.put("pizzaId", 10L);
+        item.put("quantity", 2);
+        item.put("size", "LARGE");
+        item.put("toppings", List.of("Extra Cheese"));
+
+        OrderResponseDTO result = orderService.placeOrder(1L, 2L, "address", "card", List.of(item));
+
+        assertNotNull(result);
+        assertEquals(34.0, result.getTotalAmount().doubleValue(), 0.01); // (10+5+2)*2
+        verify(orderRepo).save(any(Order.class));
     }
 }

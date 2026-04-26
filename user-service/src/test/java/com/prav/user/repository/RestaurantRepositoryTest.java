@@ -12,6 +12,12 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
+@org.springframework.boot.autoconfigure.domain.EntityScan("com.prav.user.model")
+@org.springframework.test.context.TestPropertySource(properties = {
+    "spring.jpa.hibernate.ddl-auto=create-drop",
+    "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect",
+    "spring.jpa.show-sql=true"
+})
 class RestaurantRepositoryTest {
 
     @Autowired

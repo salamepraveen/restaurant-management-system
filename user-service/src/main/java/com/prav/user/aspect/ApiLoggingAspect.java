@@ -50,47 +50,47 @@ public class ApiLoggingAspect {
             String uri = request.getRequestURI();
             String clientIp = request.getRemoteAddr();
 
-            System.out.println("\n" +
+            log.info("\n" +
                 "╔══════════════════════════════════════════════════════════════");
-            System.out.println("  >> INCOMING REQUEST");
-            System.out.println("  >> " + httpMethod + " " + uri);
-            System.out.println("  >> Controller: " + className + "." + methodName + "()");
-            System.out.println("  >> Client IP: " + clientIp);
-            System.out.println("  >> Headers: " + getHeaders(request));
+            log.info("  [CONTROLLER] >> INCOMING REQUEST");
+            log.info("  [CONTROLLER] >> " + httpMethod + " " + uri);
+            log.info("  [CONTROLLER] >> Controller: " + className + "." + methodName + "()");
+            log.info("  [CONTROLLER] >> Client IP: " + clientIp);
+            log.info("  [CONTROLLER] >> Headers: " + getHeaders(request));
 
             // Log request body (skip file uploads)
             Object[] args = joinPoint.getArgs();
             for (Object arg : args) {
                 if (!(arg instanceof HttpServletRequest) && !(arg instanceof HttpServletResponse)
                         && !(arg instanceof MultipartFile)) {
-                    System.out.println("  >> Request Body: " + toJson(arg));
+                    log.info("  [CONTROLLER] >> Request Body: " + toJson(arg));
                 }
             }
-            System.out.println("╚══════════════════════════════════════════════════════════════");
+            log.info("╚══════════════════════════════════════════════════════════════");
         }
 
         try {
             Object result = joinPoint.proceed();
             long elapsed = System.currentTimeMillis() - startTime;
 
-            System.out.println(
+            log.info(
                 "╔══════════════════════════════════════════════════════════════");
-            System.out.println("  << RESPONSE [" + className + "." + methodName + "()]");
-            System.out.println("  << Status: SUCCESS (" + elapsed + "ms)");
-            System.out.println("  << Response Body: " + toJson(result));
-            System.out.println("╚══════════════════════════════════════════════════════════════");
+            log.info("  [CONTROLLER] << RESPONSE [" + className + "." + methodName + "()]");
+            log.info("  [CONTROLLER] << Status: SUCCESS (" + elapsed + "ms)");
+            log.info("  [CONTROLLER] << Response Body: " + toJson(result));
+            log.info("╚══════════════════════════════════════════════════════════════");
 
             return result;
         } catch (Throwable ex) {
             long elapsed = System.currentTimeMillis() - startTime;
 
-            System.out.println(
+            log.error(
                 "╔══════════════════════════════════════════════════════════════");
-            System.out.println("  !! ERROR [" + className + "." + methodName + "()]");
-            System.out.println("  !! Exception: " + ex.getClass().getSimpleName());
-            System.out.println("  !! Message: " + ex.getMessage());
-            System.out.println("  !! Time: " + elapsed + "ms");
-            System.out.println("╚══════════════════════════════════════════════════════════════");
+            log.error("  [CONTROLLER] !! ERROR [" + className + "." + methodName + "()]");
+            log.error("  [CONTROLLER] !! Exception: " + ex.getClass().getSimpleName());
+            log.error("  [CONTROLLER] !! Message: " + ex.getMessage());
+            log.error("  [CONTROLLER] !! Time: " + elapsed + "ms");
+            log.error("╚══════════════════════════════════════════════════════════════");
 
             throw ex;
         }
@@ -104,18 +104,18 @@ public class ApiLoggingAspect {
         String methodName = joinPoint.getSignature().getName();
         String args = Arrays.toString(joinPoint.getArgs());
 
-        System.out.println("  [SERVICE] -> " + className + "." + methodName + "(" + truncate(args, 200) + ")");
+        log.info("  [SERVICE] START -> " + className + "." + methodName + "(" + truncate(args, 200) + ")");
 
         long startTime = System.currentTimeMillis();
         try {
             Object result = joinPoint.proceed();
             long elapsed = System.currentTimeMillis() - startTime;
 
-            System.out.println("  [SERVICE] <- " + className + "." + methodName + "() returned in " + elapsed + "ms");
+            log.info("  [SERVICE] END <- " + className + "." + methodName + "() returned in " + elapsed + "ms");
             return result;
         } catch (Throwable ex) {
             long elapsed = System.currentTimeMillis() - startTime;
-            System.out.println("  [SERVICE] !! " + className + "." + methodName + "() FAILED after " + elapsed + "ms: " + ex.getMessage());
+            log.error("  [SERVICE] FAILED !! " + className + "." + methodName + "() FAILED after " + elapsed + "ms: " + ex.getMessage());
             throw ex;
         }
     }
@@ -133,7 +133,7 @@ public class ApiLoggingAspect {
         long elapsed = System.currentTimeMillis() - startTime;
 
         if (elapsed > 200) {
-            System.out.println("  [DB-SLOW] " + className + "." + methodName + "(" + truncate(args, 100) + ") took " + elapsed + "ms");
+            log.warn("  [DB-SLOW] " + className + "." + methodName + "(" + truncate(args, 100) + ") took " + elapsed + "ms");
         }
 
         return result;

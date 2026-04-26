@@ -27,6 +27,12 @@ public class Order {
     @Column(name = "restaurant_id")
     private Long restaurantId;
 
+    @Column(name = "delivery_address")
+    private String deliveryAddress;
+
+    @Column(name = "payment_method")
+    private String paymentMethod;
+
     @Column(nullable = false)
     private BigDecimal totalAmount;
 

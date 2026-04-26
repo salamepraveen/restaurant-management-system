@@ -35,6 +35,13 @@ class PizzaRepositoryTest {
     @Autowired
     private PizzaSizeRepository pizzaSizeRepository;
 
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        pizzaSizeRepository.deleteAll();
+        toppingRepository.deleteAll();
+        pizzaRepository.deleteAll();
+    }
+
     // ========== PizzaRepository ==========
 
     @Test

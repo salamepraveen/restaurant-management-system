@@ -11,6 +11,7 @@ public class PizzaDTO {
     private Boolean vegetarian;
     private Long restaurantId;
     private Double basePrice;
+    private Boolean isAvailable;
     private List<PizzaSizeDTO> sizes;
     private List<ToppingDTO> toppings;
 	public Long getId() {
@@ -33,6 +34,12 @@ public class PizzaDTO {
 	}
 	public void setBasePrice(Double basePrice) {
 		this.basePrice = basePrice;
+	}
+	public Boolean getIsAvailable() {
+		return isAvailable;
+	}
+	public void setIsAvailable(Boolean isAvailable) {
+		this.isAvailable = isAvailable;
 	}
 	public void setDescription(String description) {
 		this.description = description;

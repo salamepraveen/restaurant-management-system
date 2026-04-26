@@ -1,7 +1,9 @@
+com\prav\user\dto\DTOCoverageTest.class
 com\prav\user\dto\DTOValidationTest.class
 com\prav\user\repository\UserRepositoryTest.class
 com\prav\user\repository\RestaurantRepositoryTest.class
 com\prav\user\aspect\LoggingAspectTest.class
+com\prav\user\model\ModelCoverageTest.class
 com\prav\user\UserControllerTest.class
 com\prav\user\service\UserServiceTest.class
 com\prav\user\UserServiceApplicationTests.class

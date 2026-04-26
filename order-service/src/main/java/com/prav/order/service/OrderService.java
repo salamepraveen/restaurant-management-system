@@ -7,7 +7,7 @@ import java.util.Map;
 public interface OrderService {
 
     // Order
-    OrderResponseDTO placeOrder(Long userId, Long restaurantId, List<Map<String, Object>> items);
+    OrderResponseDTO placeOrder(Long userId, Long restaurantId, String deliveryAddress, String paymentMethod, List<Map<String, Object>> items);
     List<OrderResponseDTO> getMyOrders(Long userId);
     List<OrderResponseDTO> getRestaurantOrders(Long restaurantId);
     OrderResponseDTO getOrderById(Long id);

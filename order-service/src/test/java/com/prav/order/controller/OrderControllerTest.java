@@ -94,11 +94,13 @@ public class OrderControllerTest {
                 .status(Order.OrderStatus.PLACED)
                 .build();
 
-        when(orderService.placeOrder(eq(10L), eq(100L), anyList())).thenReturn(order);
+        when(orderService.placeOrder(eq(10L), eq(100L), anyString(), anyString(), anyList())).thenReturn(order);
 
         String body = """
         {
             "restaurantId": 100,
+            "deliveryAddress": "123 Main St",
+            "paymentMethod": "CARD",
             "items": [{"pizzaId": 1, "size": "MEDIUM", "quantity": 2}]
         }
         """;
@@ -150,12 +152,14 @@ public class OrderControllerTest {
 
     @Test
     void placeOrder_serviceThrowsException() throws Exception {
-        when(orderService.placeOrder(eq(10L), eq(100L), anyList()))
+        when(orderService.placeOrder(eq(10L), eq(100L), anyString(), anyString(), anyList()))
                 .thenThrow(new RuntimeException("Pizza not found"));
 
         String body = """
         {
             "restaurantId": 100,
+            "deliveryAddress": "123 Main St",
+            "paymentMethod": "CARD",
             "items": [{"pizzaId": 999, "size": "SMALL", "quantity": 1}]
         }
         """;
@@ -406,11 +410,11 @@ public class OrderControllerTest {
     }
 
     @Test
-    void getDailyRevenue_forbiddenForStaff() throws Exception {
+    void getDailyRevenue_successForStaff() throws Exception {
         mockMvc.perform(get("/orders/reports/revenue/daily")
                 .header("X-User-Role", "STAFF")
                 .header("X-Restaurant-Id", 100))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
     }
 
     @Test

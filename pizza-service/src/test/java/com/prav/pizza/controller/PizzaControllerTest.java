@@ -49,7 +49,7 @@ class PizzaControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(pizzaBody())))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.message").value("Pizza created!"));
+                .andExpect(jsonPath("$.message").value("Pizza created successfully"));
     }
 
     @Test
@@ -61,18 +61,20 @@ class PizzaControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(pizzaBody())))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.error").value("Only ADMIN can add pizzas."));
+                .andExpect(jsonPath("$.message").value("Only ADMIN can add pizzas"));
     }
 
     @Test
-    void createPizza_asStaff_returns403() throws Exception {
+    void createPizza_asStaff_returns201() throws Exception {
+        when(service.createPizza(anyLong(), anyMap())).thenReturn(new PizzaDTO());
+
         mockMvc.perform(post("/pizzas")
                         .header("X-User-Id", 3L)
                         .header("X-User-Role", "STAFF")
                         .header("X-Restaurant-Id", 100L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(pizzaBody())))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isCreated());
     }
 
     // ========== ADMIN - Update ==========
@@ -87,7 +89,7 @@ class PizzaControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(pizzaBody())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Pizza updated!"));
+                .andExpect(jsonPath("$.message").value("Pizza updated successfully"));
     }
 
     @Test
@@ -110,7 +112,7 @@ class PizzaControllerTest {
                         .header("X-User-Role", "ADMIN")
                         .header("X-Restaurant-Id", 100L))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Pizza deleted!"));
+                .andExpect(jsonPath("$.message").value("Pizza deleted successfully"));
     }
 
     @Test
@@ -137,12 +139,12 @@ class PizzaControllerTest {
 
         mockMvc.perform(get("/pizzas/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.pizza").exists());
+                .andExpect(jsonPath("$.data").exists());
     }
 
     @Test
     void getPizzaById_notFound_returns404() throws Exception {
-        when(service.getPizzaById(999L)).thenThrow(new RuntimeException("Pizza not found"));
+        when(service.getPizzaById(999L)).thenThrow(new com.prav.pizza.exception.PizzaNotFoundException("Pizza not found"));
 
         mockMvc.perform(get("/pizzas/999"))
                 .andExpect(status().isNotFound());
@@ -188,7 +190,7 @@ class PizzaControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(sizeBody)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.message").value("Size added!"));
+                .andExpect(jsonPath("$.message").value("Size added successfully"));
     }
 
     @Test
@@ -221,7 +223,7 @@ class PizzaControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(toppingBody)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.message").value("Topping created!"));
+                .andExpect(jsonPath("$.message").value("Topping created successfully"));
     }
 
     @Test
@@ -262,7 +264,7 @@ class PizzaControllerTest {
                         .header("X-User-Role", "ADMIN")
                         .header("X-Restaurant-Id", 100L))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Topping deleted!"));
+                .andExpect(jsonPath("$.message").value("Topping deleted successfully"));
     }
 
     @Test

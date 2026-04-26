@@ -18,6 +18,8 @@ public class OrderResponseDTO {
     private Long id;
     private Long userId;
     private Long restaurantId;
+    private String deliveryAddress;
+    private String paymentMethod;
     private BigDecimal totalAmount;
     private Order.OrderStatus status;
     private Order.PaymentStatus paymentStatus;

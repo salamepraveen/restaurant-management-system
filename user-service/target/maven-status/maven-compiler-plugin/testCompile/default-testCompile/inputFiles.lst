@@ -1,7 +1,9 @@
-D:\Eclipse IDE\Pizza\pizza-restaurant\user-service\src\test\java\com\prav\user\UserServiceApplicationTests.java
 D:\Eclipse IDE\Pizza\pizza-restaurant\user-service\src\test\java\com\prav\user\aspect\LoggingAspectTest.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\user-service\src\test\java\com\prav\user\dto\DTOCoverageTest.java
 D:\Eclipse IDE\Pizza\pizza-restaurant\user-service\src\test\java\com\prav\user\dto\DTOValidationTest.java
-D:\Eclipse IDE\Pizza\pizza-restaurant\user-service\src\test\java\com\prav\user\service\UserServiceTest.java
-D:\Eclipse IDE\Pizza\pizza-restaurant\user-service\src\test\java\com\prav\user\repository\UserRepositoryTest.java
-D:\Eclipse IDE\Pizza\pizza-restaurant\user-service\src\test\java\com\prav\user\UserControllerTest.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\user-service\src\test\java\com\prav\user\model\ModelCoverageTest.java
 D:\Eclipse IDE\Pizza\pizza-restaurant\user-service\src\test\java\com\prav\user\repository\RestaurantRepositoryTest.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\user-service\src\test\java\com\prav\user\repository\UserRepositoryTest.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\user-service\src\test\java\com\prav\user\service\UserServiceTest.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\user-service\src\test\java\com\prav\user\UserControllerTest.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\user-service\src\test\java\com\prav\user\UserServiceApplicationTests.java

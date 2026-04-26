@@ -8,6 +8,7 @@ public class ToppingDTO {
     @NotNull(message = "Price is required")
     @Positive(message = "Price must be greater than 0")
     private Double price;
+    private Boolean isAvailable;
 	public Long getId() {
 		return id;
 	}
@@ -25,6 +26,12 @@ public class ToppingDTO {
 	}
 	public void setPrice(Double price) {
 		this.price = price;
+	}
+	public Boolean getIsAvailable() {
+		return isAvailable;
+	}
+	public void setIsAvailable(Boolean isAvailable) {
+		this.isAvailable = isAvailable;
 	}
 
 }

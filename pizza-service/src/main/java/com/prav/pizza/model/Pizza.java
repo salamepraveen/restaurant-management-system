@@ -23,6 +23,9 @@ public class Pizza {
     private Long restaurantId;
     private Double basePrice;
 
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private Boolean isAvailable = true;
+
     public Double getBasePrice() {
 		return basePrice;
 	}
@@ -107,5 +110,11 @@ public class Pizza {
 		this.toppings = toppings;
 	}
 
-   
+    public Boolean getIsAvailable() {
+        return isAvailable;
+    }
+
+    public void setIsAvailable(Boolean isAvailable) {
+        this.isAvailable = isAvailable;
+    }
 }

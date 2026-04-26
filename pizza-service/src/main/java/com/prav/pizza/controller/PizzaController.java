@@ -52,7 +52,7 @@ public class PizzaController {
             @RequestHeader("X-Restaurant-Id") Long restaurantId,
             @RequestBody Map<String, Object> body) {
 
-        if (!"ADMIN".equals(role)) {
+        if (!"ADMIN".equals(role) && !"STAFF".equals(role)) {
             throw new AccessDeniedException("Only ADMIN can add pizzas");
         }
 
@@ -72,7 +72,7 @@ public class PizzaController {
             @RequestHeader("X-Restaurant-Id") Long restaurantId,
             @RequestBody Map<String, Object> body) {
 
-        if (!"ADMIN".equals(role)) {
+        if (!"ADMIN".equals(role) && !"STAFF".equals(role)) {
             throw new AccessDeniedException("Only ADMIN can update pizzas");
         }
 
@@ -91,7 +91,7 @@ public class PizzaController {
             @RequestHeader("X-User-Role") String role,
             @RequestHeader("X-Restaurant-Id") Long restaurantId) {
 
-        if (!"ADMIN".equals(role)) {
+        if (!"ADMIN".equals(role) && !"STAFF".equals(role)) {
             throw new AccessDeniedException("Only ADMIN can delete pizzas");
         }
 
@@ -165,7 +165,7 @@ public class PizzaController {
             @RequestHeader("X-Restaurant-Id") Long restaurantId,
             @RequestBody Map<String, Object> body) {
 
-        if (!"ADMIN".equals(role)) {
+        if (!"ADMIN".equals(role) && !"STAFF".equals(role)) {
             throw new AccessDeniedException("Only ADMIN can add sizes");
         }
 
@@ -186,7 +186,7 @@ public class PizzaController {
             @RequestHeader("X-Restaurant-Id") Long restaurantId,
             @RequestBody Map<String, Object> body) {
 
-        if (!"ADMIN".equals(role)) {
+        if (!"ADMIN".equals(role) && !"STAFF".equals(role)) {
             throw new AccessDeniedException("Only ADMIN can add toppings");
         }
 
@@ -195,6 +195,26 @@ public class PizzaController {
                 .body(ApiResponse.<ToppingDTO>builder()
                         .success(true)
                         .message("Topping created successfully")
+                        .data(topping)
+                        .build());
+    }
+
+    @PutMapping("/toppings/{id}")
+    public ResponseEntity<ApiResponse<ToppingDTO>> updateTopping(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Role") String role,
+            @RequestHeader("X-Restaurant-Id") Long restaurantId,
+            @RequestBody Map<String, Object> body) {
+
+        if (!"ADMIN".equals(role) && !"STAFF".equals(role)) {
+            throw new AccessDeniedException("Only ADMIN or STAFF can update toppings");
+        }
+
+        ToppingDTO topping = service.updateTopping(id, restaurantId, body);
+        return ResponseEntity.ok(
+                ApiResponse.<ToppingDTO>builder()
+                        .success(true)
+                        .message("Topping updated successfully")
                         .data(topping)
                         .build());
     }
@@ -225,7 +245,7 @@ public class PizzaController {
             @RequestHeader("X-User-Role") String role,
             @RequestHeader("X-Restaurant-Id") Long restaurantId) {
 
-        if (!"ADMIN".equals(role)) {
+        if (!"ADMIN".equals(role) && !"STAFF".equals(role)) {
             throw new AccessDeniedException("Only ADMIN can delete toppings");
         }
 

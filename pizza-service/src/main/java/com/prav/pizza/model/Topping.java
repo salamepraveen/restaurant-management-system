@@ -17,6 +17,9 @@ public class Topping {
     private Double price;
     private Long restaurantId;
 
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private Boolean isAvailable = true;
+
     @ManyToMany(mappedBy = "toppings")
     private List<Pizza> pizzas = new ArrayList<>();
 
@@ -60,5 +63,11 @@ public class Topping {
 		this.pizzas = pizzas;
 	}
 
-    
+    public Boolean getIsAvailable() {
+        return isAvailable;
+    }
+
+    public void setIsAvailable(Boolean isAvailable) {
+        this.isAvailable = isAvailable;
+    }
 }

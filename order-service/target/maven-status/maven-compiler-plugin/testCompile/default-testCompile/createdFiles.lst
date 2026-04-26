@@ -1,8 +1,11 @@
 com\prav\order\AuditAspectTest.class
 com\prav\order\LoggingAspectTest.class
+com\prav\order\RazorpayPaymentServiceTest.class
 com\prav\order\DTOValidationTest.class
 com\prav\order\OrderServiceApplicationTests.class
+com\prav\order\ModelCoverageTest.class
 com\prav\order\ReportServiceTest.class
 com\prav\order\controller\OrderControllerTest$TestExceptionHandler.class
 com\prav\order\controller\OrderControllerTest.class
 com\prav\order\PerformanceAspectTest.class
+com\prav\order\DTOCoverageTest.class

@@ -1,2 +1,8 @@
+D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\test\java\com\prav\auth\client\ClientCoverageTest.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\test\java\com\prav\auth\controller\AuthControllerTest.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\test\java\com\prav\auth\dto\DTOCoverageTest.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\test\java\com\prav\auth\exception\ExceptionCoverageTest.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\test\java\com\prav\auth\service\AuthServiceTest.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\test\java\com\prav\auth\service\OtpServiceTest.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\test\java\com\prav\auth\util\JwtUtilTest.java
 D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\test\java\com\prav\auth_service\dto\AuthRequestValidationTest.java
-D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\test\java\com\prav\auth_service\service\auth_serviceTests.java

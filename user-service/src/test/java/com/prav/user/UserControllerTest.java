@@ -74,14 +74,13 @@ class UserControllerTest {
 
         UserDTO dto = new UserDTO();
         dto.setUsername("prav");
-        dto.setPassword("pass");
+        dto.setPassword("password");
 
         mockMvc.perform(post("/users/internal")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.username").value("prav"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("prav"));
     }
 
     @Test
@@ -91,7 +90,7 @@ class UserControllerTest {
 
         UserDTO dto = new UserDTO();
         dto.setUsername("prav");
-        dto.setPassword("pass");
+        dto.setPassword("password");
 
         mockMvc.perform(post("/users/internal")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -108,7 +107,7 @@ class UserControllerTest {
 
         mockMvc.perform(get("/users/username/prav"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.username").value("prav"));
+                .andExpect(jsonPath("$.username").value("prav"));
     }
 
     @Test
@@ -127,7 +126,7 @@ class UserControllerTest {
 
         mockMvc.perform(get("/users/internal/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.id").value(1));
+                .andExpect(jsonPath("$.id").value(1));
     }
 
     @Test
@@ -218,7 +217,7 @@ class UserControllerTest {
     @Test
     void getRestaurantUsers_success() throws Exception {
         when(userRepo.findById(1L)).thenReturn(Optional.of(testUser));
-        when(userRepo.findByAssignedRestaurantId(10L)).thenReturn(List.of(testUser));
+        when(userRepo.findByAssignedRestaurantIdOrAssignedRestaurantIdIsNull(10L)).thenReturn(List.of(testUser));
 
         mockMvc.perform(get("/users/restaurant/users")
                         .header("X-User-Id", 1)

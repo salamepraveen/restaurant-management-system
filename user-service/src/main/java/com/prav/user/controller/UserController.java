@@ -155,7 +155,7 @@ public class UserController {
             throw new AccessDeniedException("Access Denied: You do not manage this restaurant");
         }
 
-        List<User> users = userRepo.findByAssignedRestaurantId(restaurantId);
+        List<User> users = userRepo.findByAssignedRestaurantIdOrAssignedRestaurantIdIsNull(restaurantId);
         return ResponseEntity.ok(
                 ApiResponse.<List<User>>builder()
                         .success(true)

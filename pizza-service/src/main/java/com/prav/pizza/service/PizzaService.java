@@ -82,6 +82,30 @@ public class PizzaService {
         if (body.containsKey("description")) pizza.setDescription((String) body.get("description"));
         if (body.containsKey("imageUrl")) pizza.setImageUrl((String) body.get("imageUrl"));
         if (body.containsKey("vegetarian")) pizza.setVegetarian((Boolean) body.get("vegetarian"));
+        if (body.containsKey("isAvailable")) pizza.setIsAvailable((Boolean) body.get("isAvailable"));
+        if (body.containsKey("price") && body.get("price") != null) {
+            pizza.setBasePrice(Double.parseDouble(body.get("price").toString()));
+        }
+
+        @SuppressWarnings("unchecked")
+        List<Long> toppingIds = (List<Long>) body.get("toppingIds");
+        if (toppingIds != null) {
+            List<Topping> toppings = toppingRepo.findAllById(toppingIds);
+            pizza.setToppings(toppings);
+        }
+
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> sizes = (List<Map<String, Object>>) body.get("sizes");
+        if (sizes != null) {
+            pizza.getSizes().clear();
+            for (Map<String, Object> s : sizes) {
+                PizzaSize size = new PizzaSize();
+                size.setSize((String) s.get("size"));
+                size.setPrice(Double.parseDouble(s.get("price").toString()));
+                size.setPizza(pizza);
+                pizza.getSizes().add(size);
+            }
+        }
 
         return toDTO(pizzaRepo.save(pizza));
     }
@@ -169,6 +193,18 @@ public class PizzaService {
         return toToppingDTO(toppingRepo.save(topping));
     }
 
+    public ToppingDTO updateTopping(Long toppingId, Long restaurantId, Map<String, Object> body) {
+        Topping topping = toppingRepo.findById(toppingId)
+                .orElseThrow(() -> new RuntimeException("Topping not found"));
+        if (!topping.getRestaurantId().equals(restaurantId)) {
+            throw new RuntimeException("Access Denied");
+        }
+        if (body.containsKey("name")) topping.setName((String) body.get("name"));
+        if (body.containsKey("price")) topping.setPrice(Double.parseDouble(body.get("price").toString()));
+        if (body.containsKey("isAvailable")) topping.setIsAvailable((Boolean) body.get("isAvailable"));
+        return toToppingDTO(toppingRepo.save(topping));
+    }
+
     public List<ToppingDTO> getAllToppings() {
         return toppingRepo.findAll().stream().map(this::toToppingDTO).collect(Collectors.toList());
     }
@@ -202,6 +238,7 @@ public class PizzaService {
         dto.setVegetarian(pizza.getVegetarian());
         dto.setRestaurantId(pizza.getRestaurantId());
         dto.setBasePrice(pizza.getBasePrice());    
+        dto.setIsAvailable(pizza.getIsAvailable());
 
         List<PizzaSizeDTO> sizeDTOs = new ArrayList<>();
         for (PizzaSize s : pizza.getSizes()) {
@@ -231,6 +268,7 @@ public class PizzaService {
         dto.setId(topping.getId());
         dto.setName(topping.getName());
         dto.setPrice(topping.getPrice());
+        dto.setIsAvailable(topping.getIsAvailable());
         return dto;
     }
 }

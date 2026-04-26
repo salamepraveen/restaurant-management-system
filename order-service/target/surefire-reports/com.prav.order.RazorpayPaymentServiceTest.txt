@@ -1,0 +1,50 @@
+-------------------------------------------------------------------------------
+Test set: com.prav.order.RazorpayPaymentServiceTest
+-------------------------------------------------------------------------------
+Tests run: 7, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: 0.207 s <<< FAILURE! -- in com.prav.order.RazorpayPaymentServiceTest
+com.prav.order.RazorpayPaymentServiceTest.testCreateRazorpayOrder_Success -- Time elapsed: 0.034 s <<< ERROR!
+org.mockito.exceptions.base.MockitoException: Could not initialize mocked construction
+	at com.razorpay.RazorpayClient.<init>(RazorpayClient.java)
+	at com.prav.order.service.RazorpayPaymentService.getClient(RazorpayPaymentService.java:30)
+	at com.prav.order.service.RazorpayPaymentService.createRazorpayOrder(RazorpayPaymentService.java:35)
+	at com.prav.order.RazorpayPaymentServiceTest.testCreateRazorpayOrder_Success(RazorpayPaymentServiceTest.java:82)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: org.mockito.exceptions.misusing.MissingMethodInvocationException: 
+when() requires an argument which has to be 'a method call on a mock'.
+For example:
+    when(mock.getArticles()).thenReturn(articles);
+
+Also, this error might show up because:
+1. you stub either of: final/private/native/equals()/hashCode() methods.
+   Those methods *cannot* be stubbed/verified.
+   Mocking methods declared on non-public parent classes is not supported.
+2. inside when() you don't call method on mock but on some other object.
+
+	at com.prav.order.RazorpayPaymentServiceTest.lambda$testCreateRazorpayOrder_Success$2(RazorpayPaymentServiceTest.java:78)
+	... 7 more
+
+com.prav.order.RazorpayPaymentServiceTest.testProcessRefund_Success -- Time elapsed: 0.028 s <<< ERROR!
+org.mockito.exceptions.base.MockitoException: Could not initialize mocked construction
+	at com.razorpay.RazorpayClient.<init>(RazorpayClient.java)
+	at com.prav.order.service.RazorpayPaymentService.getClient(RazorpayPaymentService.java:30)
+	at com.prav.order.service.RazorpayPaymentService.processRefund(RazorpayPaymentService.java:77)
+	at com.prav.order.RazorpayPaymentServiceTest.testProcessRefund_Success(RazorpayPaymentServiceTest.java:115)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: org.mockito.exceptions.misusing.MissingMethodInvocationException: 
+when() requires an argument which has to be 'a method call on a mock'.
+For example:
+    when(mock.getArticles()).thenReturn(articles);
+
+Also, this error might show up because:
+1. you stub either of: final/private/native/equals()/hashCode() methods.
+   Those methods *cannot* be stubbed/verified.
+   Mocking methods declared on non-public parent classes is not supported.
+2. inside when() you don't call method on mock but on some other object.
+
+	at com.prav.order.RazorpayPaymentServiceTest.lambda$testProcessRefund_Success$5(RazorpayPaymentServiceTest.java:111)
+	... 7 more
+

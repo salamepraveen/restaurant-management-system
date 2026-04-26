@@ -43,7 +43,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public OrderResponseDTO placeOrder(Long userId, Long restaurantId, List<Map<String, Object>> items) {
+    public OrderResponseDTO placeOrder(Long userId, Long restaurantId, String deliveryAddress, String paymentMethod, List<Map<String, Object>> items) {
         System.out.println("  [ORDER] Placing order for user: " + userId + ", restaurant: " + restaurantId);
 
         BigDecimal totalAmount = BigDecimal.ZERO;
@@ -69,23 +69,33 @@ public class OrderServiceImpl implements OrderService {
             double basePrice = basePriceNum != null ? basePriceNum.doubleValue() : 0.0;
             String pizzaName = (String) pizzaData.get("name");
             
-            double multiplier = 1.0;
-            if ("LARGE".equalsIgnoreCase(size)) multiplier = 2.0;
-            else if ("MEDIUM".equalsIgnoreCase(size)) multiplier = 1.5;
+            double sizePrice = 0.0;
+            if (pizzaData.get("sizes") != null) {
+                List<Map<String, Object>> pizzaSizes = (List<Map<String, Object>>) pizzaData.get("sizes");
+                for (Map<String, Object> s : pizzaSizes) {
+                    if (size.equalsIgnoreCase((String) s.get("size"))) {
+                        sizePrice = s.get("price") != null ? ((Number) s.get("price")).doubleValue() : 0.0;
+                        break;
+                    }
+                }
+            }
             
             double toppingsPrice = 0.0;
-            if (toppingsList != null && pizzaData.get("toppings") != null) {
-                List<Map<String, Object>> pizzaToppings = (List<Map<String, Object>>) pizzaData.get("toppings");
-                for (String tName : toppingsList) {
-                    for (Map<String, Object> pt : pizzaToppings) {
-                        if (tName.equalsIgnoreCase((String) pt.get("name"))) {
-                            toppingsPrice += pt.get("price") != null ? ((Number) pt.get("price")).doubleValue() : 50.0;
-                            break;
+            if (toppingsList != null && !toppingsList.isEmpty()) {
+                Map<String, Object> response = pizzaClient.getAllToppings();
+                if (response.get("data") != null) {
+                    List<Map<String, Object>> allToppings = (List<Map<String, Object>>) response.get("data");
+                    for (String tName : toppingsList) {
+                        for (Map<String, Object> pt : allToppings) {
+                            if (tName.equalsIgnoreCase((String) pt.get("name"))) {
+                                toppingsPrice += pt.get("price") != null ? ((Number) pt.get("price")).doubleValue() : 50.0;
+                                break;
+                            }
                         }
                     }
                 }
             }
-            double finalPrice = (basePrice * multiplier) + toppingsPrice;
+            double finalPrice = basePrice + sizePrice + toppingsPrice;
 
             OrderItem orderItem = new OrderItem();
             orderItem.setPizzaId(pizzaId);
@@ -102,6 +112,8 @@ public class OrderServiceImpl implements OrderService {
         Order order = new Order();
         order.setUserId(userId);
         order.setRestaurantId(restaurantId);
+        order.setDeliveryAddress(deliveryAddress);
+        order.setPaymentMethod(paymentMethod);
         order.setTotalAmount(totalAmount);
         order = orderRepo.save(order);
 
@@ -373,6 +385,8 @@ public class OrderServiceImpl implements OrderService {
                 .id(order.getId())
                 .userId(order.getUserId())
                 .restaurantId(order.getRestaurantId())
+                .deliveryAddress(order.getDeliveryAddress())
+                .paymentMethod(order.getPaymentMethod())
                 .totalAmount(order.getTotalAmount())
                 .status(order.getStatus())
                 .paymentStatus(order.getPaymentStatus())

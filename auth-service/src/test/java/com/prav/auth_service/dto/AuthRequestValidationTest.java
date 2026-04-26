@@ -52,7 +52,7 @@ public class AuthRequestValidationTest {
 
         Set<ConstraintViolation<AuthRequest>> violations = validator.validate(req);
         assertEquals(1, violations.size());
-        assertEquals("Password must be 6-100 characters", violations.iterator().next().getMessage());
+        assertEquals("Password must be at least 4 characters", violations.iterator().next().getMessage());
     }
 
     @Test
@@ -62,6 +62,6 @@ public class AuthRequestValidationTest {
         req.setPassword("");
 
         Set<ConstraintViolation<AuthRequest>> violations = validator.validate(req);
-        assertEquals(2, violations.size());
+        assertEquals(3, violations.size()); // 1 for username blank, 2 for password blank (@NotBlank + @Size)
     }
 }

@@ -40,11 +40,13 @@ public class OrderController {
                     Map<String, Object> map = new HashMap<>();
                     map.put("pizzaId", item.getPizzaId());
                     map.put("quantity", item.getQuantity());
+                    map.put("size", item.getSize());
+                    map.put("toppings", item.getToppings());
                     return map;
                 })
                 .collect(java.util.stream.Collectors.toList());
 
-        OrderResponseDTO order = service.placeOrder(userId, request.getRestaurantId(), items);
+        OrderResponseDTO order = service.placeOrder(userId, request.getRestaurantId(), request.getDeliveryAddress(), request.getPaymentMethod(), items);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.<OrderResponseDTO>builder()
                         .success(true)
@@ -191,7 +193,7 @@ public class OrderController {
             @RequestHeader("X-User-Role") String role,
             @RequestHeader("X-Restaurant-Id") Long restaurantId,
             @RequestParam(defaultValue = "7") int days) {
-        if (!"ADMIN".equals(role)) throw new AccessDeniedException("Only ADMIN");
+        if (!"ADMIN".equals(role) && !"STAFF".equals(role)) throw new AccessDeniedException("Only STAFF or ADMIN");
         return ResponseEntity.ok(
                 ApiResponse.<List<Map<String, Object>>>builder()
                         .success(true).message("Daily revenue retrieved")

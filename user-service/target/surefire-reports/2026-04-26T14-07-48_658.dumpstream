@@ -1,0 +1,5 @@
+# Created at 2026-04-26T14:07:48.906
+Boot Manifest-JAR contains absolute paths in classpath 'D:\Eclipse IDE\Pizza\pizza-restaurant\user-service\target\test-classes'
+Hint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
+'other' has different root
+
