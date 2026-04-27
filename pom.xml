@@ -16,6 +16,9 @@
     <version>1.0.0</version>
     <packaging>pom</packaging>
 
+
+         
+
     <!-- Modules (FLAT STRUCTURE) -->
     <modules>
         <module>common-lib/common-dto</module>
