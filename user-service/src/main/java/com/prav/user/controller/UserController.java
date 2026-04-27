@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,16 +27,17 @@ import jakarta.validation.Valid;
 @RequestMapping("/users")
 public class UserController {
 
-    @Autowired
-    private UserService service;
+    private final UserService service;
+    private final UserRepository userRepo;
+    private final RestaurantRepository restaurantRepo;
 
-    @Autowired
-    private UserRepository userRepo;
+    public UserController(UserService service, UserRepository userRepo, RestaurantRepository restaurantRepo) {
+        this.service = service;
+        this.userRepo = userRepo;
+        this.restaurantRepo = restaurantRepo;
+    }
 
-    @Autowired
-    private RestaurantRepository restaurantRepo;
-
-    // ==================== Internal (Feign) — Plain DTO, No ApiResponse ====================
+    // Internal (Feign) — Plain DTO, No ApiResponse
 
     @PostMapping("/internal")
     public UserDTO createUser(@Valid @RequestBody UserDTO request) {
@@ -76,7 +76,20 @@ public class UserController {
         return convertToDTO(user);
     }
 
-    // ==================== USER — Create Restaurant ====================
+    //PUBLIC — Get All Restaurants 
+
+    @GetMapping("/public/restaurants")
+    public ResponseEntity<ApiResponse<List<Restaurant>>> getAllPublicRestaurants() {
+        List<Restaurant> restaurants = service.getAllPublicRestaurants();
+        return ResponseEntity.ok(
+                ApiResponse.<List<Restaurant>>builder()
+                        .success(true)
+                        .message("Public restaurants retrieved successfully")
+                        .data(restaurants)
+                        .build());
+    }
+
+    // USER — Create Restaurant 
 
     @PostMapping("/restaurant")
     public ResponseEntity<ApiResponse<Map<String, Object>>> createRestaurant(
@@ -118,7 +131,7 @@ public class UserController {
                         .build());
     }
 
-    // ==================== USER — Get My Restaurants ====================
+    // USER — Get My Restaurants 
 
     @GetMapping("/restaurants")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getMyRestaurants(
@@ -140,7 +153,7 @@ public class UserController {
                         .build());
     }
 
-    // ==================== ADMIN — Get Restaurant Users ====================
+    //  ADMIN — Get Restaurant Users 
 
     @GetMapping("/restaurant/users")
     public ResponseEntity<ApiResponse<List<User>>> getUsers(
@@ -164,7 +177,7 @@ public class UserController {
                         .build());
     }
 
-    // ==================== ADMIN — Promote User ====================
+    //  ADMIN — Promote User 
 
     @PutMapping("/promote/{userId}")
     public ResponseEntity<ApiResponse<Map<String, String>>> promote(
@@ -192,7 +205,7 @@ public class UserController {
                         .build());
     }
 
-    // ==================== ADMIN — Demote User ====================
+    //  ADMIN — Demote User 
 
     @PutMapping("/demote/{userId}")
     public ResponseEntity<ApiResponse<Map<String, String>>> demote(
@@ -219,7 +232,23 @@ public class UserController {
                         .build());
     }
 
-    // ==================== USER — Update Profile ====================
+    //  USER — Get Profile 
+    @GetMapping("/profile")
+    public ResponseEntity<ApiResponse<UserDTO>> getProfile(
+            @RequestHeader("X-User-Id") Long userId) {
+        
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+        
+        return ResponseEntity.ok(
+                ApiResponse.<UserDTO>builder()
+                        .success(true)
+                        .message("Profile retrieved successfully")
+                        .data(convertToDTO(user))
+                        .build());
+    }
+
+    //  USER — Update Profile 
     @PutMapping("/profile")
     public ResponseEntity<ApiResponse<UserDTO>> updateProfile(
             @RequestHeader("X-User-Id") Long userId,
@@ -235,7 +264,7 @@ public class UserController {
                         .build());
     }
 
-    // ==================== Helper ====================
+    //  Helper 
 
     private UserDTO convertToDTO(User user) {
         UserDTO dto = new UserDTO();

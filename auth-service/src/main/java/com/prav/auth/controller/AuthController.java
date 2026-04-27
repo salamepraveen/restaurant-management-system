@@ -1,6 +1,5 @@
 package com.prav.auth.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,8 +14,11 @@ import jakarta.validation.Valid;
 @RequestMapping("/auth")
 public class AuthController {
 
-    @Autowired
-    private AuthService service;
+    private final AuthService service;
+ 
+    public AuthController(AuthService service) {
+        this.service = service;
+    }
 
     // ==================== SIGNUP (OTP-based) ====================
 

@@ -152,7 +152,7 @@ public class UserServiceApplicationTests {
         verify(userRepo, never()).save(any());
     }
 
-    // ========== promoteUser ==========
+    //  promoteUser 
 
     @Test
     void testPromoteUser_ToStaff_Success() {
@@ -214,7 +214,7 @@ public class UserServiceApplicationTests {
         assertThrows(RuntimeException.class, () -> userService.promoteUser(1L, 1L, "STAFF"));
     }
 
-    // ========== demoteToUser ==========
+    //  demoteToUser 
 
     @Test
     void testDemoteToUser_Success() {

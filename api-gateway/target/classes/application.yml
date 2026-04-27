@@ -36,3 +36,5 @@ eureka:
       defaultZone: http://localhost:8761/eureka/
   instance:
     prefer-ip-address: true
+jwt:
+  secret: spidey-secret-key-stacy-gwen-spidey-secret

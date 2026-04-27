@@ -7,7 +7,6 @@ import com.prav.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -26,7 +25,6 @@ class UserServiceTest {
     @Mock
     private RestaurantRepository restaurantRepo;
 
-    @InjectMocks
     private UserService userService;
 
     private User testUser;
@@ -35,6 +33,8 @@ class UserServiceTest {
 
     @BeforeEach
     void setUp() {
+        userService = new UserService(userRepo, restaurantRepo);
+
         testUser = new User();
         testUser.setId(1L);
         testUser.setUsername("prav");

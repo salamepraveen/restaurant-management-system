@@ -1,8 +1,0 @@
-com\prav\auth\exception\ExceptionCoverageTest.class
-com\prav\auth_service\dto\AuthRequestValidationTest.class
-com\prav\auth\util\JwtUtilTest.class
-com\prav\auth\service\AuthServiceTest.class
-com\prav\auth\dto\DTOCoverageTest.class
-com\prav\auth\controller\AuthControllerTest.class
-com\prav\auth\service\OtpServiceTest.class
-com\prav\auth\client\ClientCoverageTest.class

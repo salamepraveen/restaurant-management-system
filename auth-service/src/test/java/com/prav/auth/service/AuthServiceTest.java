@@ -9,7 +9,6 @@ import com.prav.common.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -30,8 +29,10 @@ public class AuthServiceTest {
     @Mock
     private OtpService otpService;
 
-    @InjectMocks
     private AuthService authService;
+    
+    @Mock
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
@@ -39,6 +40,7 @@ public class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
+        authService = new AuthService(userClient, jwtUtil, otpService, passwordEncoder);
         testUser = new UserDTO();
         testUser.setId(1L);
         testUser.setUsername("testuser");
@@ -50,6 +52,7 @@ public class AuthServiceTest {
     void signin_success() {
         when(userClient.getUserByUsername("testuser")).thenReturn(testUser);
         when(jwtUtil.generateToken(testUser)).thenReturn("fake-jwt-token");
+        when(passwordEncoder.matches("password123", testUser.getPassword())).thenReturn(true);
 
         AuthRequest req = new AuthRequest();
         req.setUsername("testuser");
@@ -77,6 +80,7 @@ public class AuthServiceTest {
     @Test
     void signin_wrongPassword_throwsException() {
         when(userClient.getUserByUsername("testuser")).thenReturn(testUser);
+        when(passwordEncoder.matches("wrong-pass", testUser.getPassword())).thenReturn(false);
 
         AuthRequest req = new AuthRequest();
         req.setUsername("testuser");
@@ -90,6 +94,7 @@ public class AuthServiceTest {
         when(userClient.getUserByUsername(anyString())).thenThrow(new RuntimeException("404 Not Found"));
         when(userClient.createUser(any(UserDTO.class))).thenReturn(testUser);
         when(jwtUtil.generateToken(any(UserDTO.class))).thenReturn("new-token");
+        when(passwordEncoder.encode(anyString())).thenReturn("encoded-pass");
 
         AuthRequest req = new AuthRequest();
         req.setUsername("newuser");
@@ -133,6 +138,7 @@ public class AuthServiceTest {
         when(otpService.verifySignupOtp("email@test.com", "123456")).thenReturn(signupData);
         when(userClient.createUser(any(UserDTO.class))).thenReturn(testUser);
         when(jwtUtil.generateToken(testUser)).thenReturn("tk");
+        when(passwordEncoder.encode("pass")).thenReturn("encoded-pass");
 
         OtpVerifyDTO req = new OtpVerifyDTO();
         req.setEmail("email@test.com");
@@ -197,5 +203,21 @@ public class AuthServiceTest {
         req.setEmail("bad@test.com");
         req.setOtp("123456");
         assertThrows(InvalidCredentialsException.class, () -> authService.verifyLoginOtp(req));
+    }
+ 
+    @Test
+    void requestSignupOtp_genericError() {
+        when(userClient.getUserByUsername("user")).thenThrow(new RuntimeException("500 Internal Error"));
+        OtpRequestDTO req = new OtpRequestDTO();
+        req.setUsername("user");
+        assertThrows(RuntimeException.class, () -> authService.requestSignupOtp(req));
+    }
+ 
+    @Test
+    void signupDirect_genericError() {
+        when(userClient.getUserByUsername("user")).thenThrow(new RuntimeException("500 Internal Error"));
+        AuthRequest req = new AuthRequest();
+        req.setUsername("user");
+        assertThrows(RuntimeException.class, () -> authService.signupDirect(req));
     }
 }

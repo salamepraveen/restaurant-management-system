@@ -48,7 +48,7 @@ class LoggingAspectTest {
         RequestContextHolder.setRequestAttributes(attributes);
     }
 
-    // ========== logController ==========
+    //  logController 
 
     @Test
     void logController_successfulExecution_logsStartAndEnd() throws Throwable {
@@ -66,7 +66,7 @@ class LoggingAspectTest {
 
         assertEquals("result", result);
         long controllerLogs = appender.list.stream()
-                .filter(e -> e.getFormattedMessage().contains("[CONTROLLER]"))
+                .filter(e -> e.getFormattedMessage().contains(">>"))
                 .count();
         assertTrue(controllerLogs >= 2, "Should have at least 2 controller logs");
         assertTrue(appender.list.stream().anyMatch(e -> e.getFormattedMessage().contains("RESPONSE")));
@@ -112,7 +112,7 @@ class LoggingAspectTest {
         assertSame(fakeResult, result);
     }
 
-    // ========== logService ==========
+    //  logService 
 
     @Test
     void logService_successfulExecution_logsStartAndEnd() throws Throwable {
@@ -130,8 +130,8 @@ class LoggingAspectTest {
                 .filter(e -> e.getFormattedMessage().contains("[SERVICE]"))
                 .count();
         assertEquals(2, serviceLogs); // START + END
-        assertTrue(appender.list.stream().anyMatch(e -> e.getFormattedMessage().contains("START")));
-        assertTrue(appender.list.stream().anyMatch(e -> e.getFormattedMessage().contains("END")));
+        assertTrue(appender.list.stream().anyMatch(e -> e.getFormattedMessage().contains("->")));
+        assertTrue(appender.list.stream().anyMatch(e -> e.getFormattedMessage().contains("<-")));
     }
 
     @Test
@@ -145,7 +145,7 @@ class LoggingAspectTest {
 
         assertThrows(RuntimeException.class, () -> loggingAspect.logService(joinPoint));
 
-        assertTrue(appender.list.stream().anyMatch(e -> e.getFormattedMessage().contains("START")));
+        assertTrue(appender.list.stream().anyMatch(e -> e.getFormattedMessage().contains("->")));
         assertTrue(appender.list.stream().anyMatch(e -> e.getFormattedMessage().contains("FAILED")));
         assertTrue(appender.list.stream().anyMatch(e -> e.getFormattedMessage().contains("User not found")));
     }

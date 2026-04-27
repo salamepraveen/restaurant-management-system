@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApiLoggingAspect.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Order Service</a> &gt; <a href="index.source.html" class="el_package">com.prav.order.aspect</a> &gt; <span class="el_source">ApiLoggingAspect.java</span></div><h1>ApiLoggingAspect.java</h1><pre class="source lang-java linenums">package com.prav.order.aspect;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+@Aspect
+@Component
+@SuppressWarnings(&quot;java:S2139&quot;)
+<span class="fc" id="L24">public class ApiLoggingAspect {</span>
+
+<span class="fc" id="L26">    private static final Logger log = LoggerFactory.getLogger(ApiLoggingAspect.class);</span>
+<span class="fc" id="L27">    private final ObjectMapper objectMapper = new ObjectMapper();</span>
+
+    private static final String BORDER = &quot;╔══════════════════════════════════════════════════════════════&quot;;
+    private static final String BORDER_END = &quot;╚══════════════════════════════════════════════════════════════&quot;;
+
+    @Pointcut(&quot;within(@org.springframework.web.bind.annotation.RestController *)&quot;)
+<span class="nc" id="L33">    public void controllerMethods() {}</span>
+
+    @Pointcut(&quot;within(@org.springframework.stereotype.Service *)&quot;)
+<span class="nc" id="L36">    public void serviceMethods() {}</span>
+
+    @Pointcut(&quot;within(@org.springframework.stereotype.Repository *)&quot;)
+<span class="nc" id="L39">    public void repositoryMethods() {}</span>
+
+    @Around(&quot;controllerMethods()&quot;)
+    public Object logController(ProceedingJoinPoint joinPoint) throws Throwable {
+<span class="fc" id="L43">        String className = joinPoint.getTarget().getClass().getSimpleName();</span>
+<span class="fc" id="L44">        String methodName = joinPoint.getSignature().getName();</span>
+<span class="fc" id="L45">        long startTime = System.currentTimeMillis();</span>
+
+<span class="pc bpc" id="L47" title="1 of 2 branches missed.">        if (log.isInfoEnabled()) {</span>
+<span class="fc" id="L48">            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">            if (attributes != null) {</span>
+<span class="fc" id="L50">                HttpServletRequest request = attributes.getRequest();</span>
+<span class="fc" id="L51">                log.info(&quot;\n{}&quot;, BORDER);</span>
+<span class="fc" id="L52">                log.info(&quot;  &gt;&gt; INCOMING REQUEST&quot;);</span>
+<span class="fc" id="L53">                log.info(&quot;  &gt;&gt; {} {}&quot;, request.getMethod(), request.getRequestURI());</span>
+<span class="fc" id="L54">                log.info(&quot;  &gt;&gt; Controller: {}.{}()&quot;, className, methodName);</span>
+<span class="fc" id="L55">                log.info(&quot;  &gt;&gt; Client IP: {}&quot;, request.getRemoteAddr());</span>
+<span class="fc" id="L56">                log.info(&quot;  &gt;&gt; Headers: {}&quot;, getHeaders(request));</span>
+
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">                for (Object arg : joinPoint.getArgs()) {</span>
+<span class="nc bnc" id="L59" title="All 6 branches missed.">                    if (!(arg instanceof HttpServletRequest) &amp;&amp; !(arg instanceof HttpServletResponse) &amp;&amp; !(arg instanceof MultipartFile)) {</span>
+<span class="nc" id="L60">                        log.info(&quot;  &gt;&gt; Request Body: {}&quot;, toJson(arg));</span>
+                    }
+                }
+<span class="fc" id="L63">                log.info(BORDER_END);</span>
+            }
+        }
+
+        try {
+<span class="fc" id="L68">            Object result = joinPoint.proceed();</span>
+<span class="fc" id="L69">            long elapsed = System.currentTimeMillis() - startTime;</span>
+
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">            if (log.isInfoEnabled()) {</span>
+<span class="fc" id="L72">                log.info(BORDER);</span>
+<span class="fc" id="L73">                log.info(&quot;  &lt;&lt; RESPONSE [{}.{}()]&quot;, className, methodName);</span>
+<span class="fc" id="L74">                log.info(&quot;  &lt;&lt; Status: SUCCESS ({}ms)&quot;, elapsed);</span>
+<span class="fc" id="L75">                log.info(&quot;  &lt;&lt; Response Body: {}&quot;, toJson(result));</span>
+<span class="fc" id="L76">                log.info(BORDER_END);</span>
+            }
+<span class="fc" id="L78">            return result;</span>
+<span class="fc" id="L79">        } catch (Throwable ex) {</span>
+<span class="fc" id="L80">            long elapsed = System.currentTimeMillis() - startTime;</span>
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">            if (log.isErrorEnabled()) {</span>
+<span class="fc" id="L82">                log.error(BORDER);</span>
+<span class="fc" id="L83">                log.error(&quot;  !! ERROR [{}.{}()]&quot;, className, methodName);</span>
+<span class="fc" id="L84">                log.error(&quot;  !! Exception: {}&quot;, ex.getClass().getSimpleName());</span>
+<span class="fc" id="L85">                log.error(&quot;  !! Message: {}&quot;, ex.getMessage());</span>
+<span class="fc" id="L86">                log.error(&quot;  !! Time: {}ms&quot;, elapsed);</span>
+<span class="fc" id="L87">                log.error(BORDER_END);</span>
+            }
+<span class="fc" id="L89">            throw ex;</span>
+        }
+    }
+
+    @Around(&quot;serviceMethods()&quot;)
+    public Object logService(ProceedingJoinPoint joinPoint) throws Throwable {
+<span class="fc" id="L95">        String className = joinPoint.getTarget().getClass().getSimpleName();</span>
+<span class="fc" id="L96">        String methodName = joinPoint.getSignature().getName();</span>
+
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">        if (log.isInfoEnabled()) {</span>
+<span class="fc" id="L99">            log.info(&quot;  [SERVICE] -&gt; {}.{}({})&quot;, className, methodName, truncate(Arrays.toString(joinPoint.getArgs()), 200));</span>
+        }
+
+<span class="fc" id="L102">        long startTime = System.currentTimeMillis();</span>
+        try {
+<span class="fc" id="L104">            Object result = joinPoint.proceed();</span>
+<span class="fc" id="L105">            long elapsed = System.currentTimeMillis() - startTime;</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">            if (log.isInfoEnabled()) {</span>
+<span class="fc" id="L107">                log.info(&quot;  [SERVICE] &lt;- {}.{}() returned in {}ms&quot;, className, methodName, elapsed);</span>
+            }
+<span class="fc" id="L109">            return result;</span>
+<span class="fc" id="L110">        } catch (Throwable ex) {</span>
+<span class="fc" id="L111">            long elapsed = System.currentTimeMillis() - startTime;</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">            if (log.isErrorEnabled()) {</span>
+<span class="fc" id="L113">                log.error(&quot;  [SERVICE] !! {}.{}() FAILED after {}ms: {}&quot;, className, methodName, elapsed, ex.getMessage());</span>
+            }
+<span class="fc" id="L115">            throw ex;</span>
+        }
+    }
+
+    @Around(&quot;repositoryMethods()&quot;)
+    public Object logRepository(ProceedingJoinPoint joinPoint) throws Throwable {
+<span class="fc" id="L121">        long startTime = System.currentTimeMillis();</span>
+<span class="fc" id="L122">        Object result = joinPoint.proceed();</span>
+<span class="fc" id="L123">        long elapsed = System.currentTimeMillis() - startTime;</span>
+
+<span class="pc bpc" id="L125" title="1 of 4 branches missed.">        if (elapsed &gt; 200 &amp;&amp; log.isWarnEnabled()) {</span>
+<span class="fc" id="L126">            String className = joinPoint.getTarget().getClass().getSimpleName();</span>
+<span class="fc" id="L127">            String methodName = joinPoint.getSignature().getName();</span>
+<span class="fc" id="L128">            log.warn(&quot;  [DB-SLOW] {}.{}({}) took {}ms&quot;, className, methodName, truncate(Arrays.toString(joinPoint.getArgs()), 100), elapsed);</span>
+        }
+
+<span class="fc" id="L131">        return result;</span>
+    }
+
+    private String toJson(Object obj) {
+        try {
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">            if (obj == null) return &quot;null&quot;;</span>
+<span class="fc" id="L137">            return truncate(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj), 500);</span>
+<span class="nc" id="L138">        } catch (Exception e) {</span>
+<span class="nc" id="L139">            return obj.toString();</span>
+        }
+    }
+
+    private String truncate(String str, int maxLen) {
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">        if (str == null) return &quot;null&quot;;</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">        return str.length() &gt; maxLen ? str.substring(0, maxLen) + &quot;...(truncated)&quot; : str;</span>
+    }
+
+    private Map&lt;String, String&gt; getHeaders(HttpServletRequest request) {
+<span class="fc" id="L149">        Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L150">        java.util.Enumeration&lt;String&gt; headerNames = request.getHeaderNames();</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">        while (headerNames.hasMoreElements()) {</span>
+<span class="fc" id="L152">            String name = headerNames.nextElement();</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">            if (&quot;authorization&quot;.equalsIgnoreCase(name)) {</span>
+<span class="fc" id="L154">                String val = request.getHeader(name);</span>
+<span class="pc bpc" id="L155" title="1 of 2 branches missed.">                headers.put(name, val.length() &gt; 15 ? val.substring(0, 15) + &quot;...&quot; : val);</span>
+<span class="fc" id="L156">            } else {</span>
+<span class="nc" id="L157">                headers.put(name, request.getHeader(name));</span>
+            }
+<span class="fc" id="L159">        }</span>
+<span class="fc" id="L160">        return headers;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

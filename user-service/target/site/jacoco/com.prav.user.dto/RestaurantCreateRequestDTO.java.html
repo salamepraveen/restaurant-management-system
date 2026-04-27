@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RestaurantCreateRequestDTO.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">User Service</a> &gt; <a href="index.source.html" class="el_package">com.prav.user.dto</a> &gt; <span class="el_source">RestaurantCreateRequestDTO.java</span></div><h1>RestaurantCreateRequestDTO.java</h1><pre class="source lang-java linenums">package com.prav.user.dto;
+import jakarta.validation.constraints.*;
+
+<span class="fc" id="L4">public class RestaurantCreateRequestDTO {</span>
+
+    @NotBlank(message = &quot;Restaurant name is required&quot;)
+    @Size(min = 2, max = 100, message = &quot;Name must be 2-100 characters&quot;)
+    private String name;
+
+    private String address;
+
+    private String city;
+
+    private String phone;
+
+    @Pattern(regexp = &quot;^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$&quot;,
+            message = &quot;Invalid email format&quot;)
+    private String email;
+
+    // getters and setters
+<span class="fc" id="L21">    public String getName() { return name; }</span>
+<span class="fc" id="L22">    public void setName(String name) { this.name = name; }</span>
+<span class="fc" id="L23">    public String getAddress() { return address; }</span>
+<span class="fc" id="L24">    public void setAddress(String address) { this.address = address; }</span>
+<span class="fc" id="L25">    public String getCity() { return city; }</span>
+<span class="fc" id="L26">    public void setCity(String city) { this.city = city; }</span>
+<span class="fc" id="L27">    public String getPhone() { return phone; }</span>
+<span class="fc" id="L28">    public void setPhone(String phone) { this.phone = phone; }</span>
+<span class="fc" id="L29">    public String getEmail() { return email; }</span>
+<span class="fc" id="L30">    public void setEmail(String email) { this.email = email; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

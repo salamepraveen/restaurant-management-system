@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ToppingCreateRequestDTO.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Pizza Service</a> &gt; <a href="index.source.html" class="el_package">com.prav.pizza.dto</a> &gt; <span class="el_source">ToppingCreateRequestDTO.java</span></div><h1>ToppingCreateRequestDTO.java</h1><pre class="source lang-java linenums">package com.prav.pizza.dto;
+
+import jakarta.validation.constraints.*;
+
+<span class="fc" id="L5">public class ToppingCreateRequestDTO {</span>
+
+    @NotBlank(message = &quot;Topping name is required&quot;)
+    @Size(min = 2, max = 50, message = &quot;Name must be 2-50 characters&quot;)
+    private String name;
+
+    @NotNull(message = &quot;Price is required&quot;)
+    @Positive(message = &quot;Price must be greater than 0&quot;)
+    private Double price;
+
+    private Boolean vegetarian;
+
+	public String getName() {
+<span class="fc" id="L18">		return name;</span>
+	}
+
+	public void setName(String name) {
+<span class="fc" id="L22">		this.name = name;</span>
+<span class="fc" id="L23">	}</span>
+
+	public Double getPrice() {
+<span class="fc" id="L26">		return price;</span>
+	}
+
+	public void setPrice(Double price) {
+<span class="fc" id="L30">		this.price = price;</span>
+<span class="fc" id="L31">	}</span>
+
+	public Boolean getVegetarian() {
+<span class="fc" id="L34">		return vegetarian;</span>
+	}
+
+	public void setVegetarian(Boolean vegetarian) {
+<span class="fc" id="L38">		this.vegetarian = vegetarian;</span>
+<span class="fc" id="L39">	}</span>
+
+   
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

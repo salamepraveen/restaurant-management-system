@@ -1,0 +1,20 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+Pizza Service,com.prav.pizza.controller,PizzaController,89,272,9,19,20,98,9,21,2,14
+Pizza Service,com.prav.pizza.exception,ToppingNotFoundException,9,0,0,0,4,0,2,0,2,0
+Pizza Service,com.prav.pizza.exception,AccessDeniedException,0,4,0,0,0,2,0,1,0,1
+Pizza Service,com.prav.pizza.exception,PizzaOperationException,9,0,0,0,4,0,2,0,2,0
+Pizza Service,com.prav.pizza.exception,PizzaNotFoundException,5,4,0,0,2,2,1,1,1,1
+Pizza Service,com.prav.pizza.exception,GlobalExceptionHandler,38,41,0,0,14,15,2,3,2,3
+Pizza Service,com.prav.pizza.service,PizzaService,129,622,17,35,19,120,13,39,2,24
+Pizza Service,com.prav.pizza.dto,PizzaDTO,0,73,0,0,0,31,0,21,0,21
+Pizza Service,com.prav.pizza.dto,ToppingDTO,0,31,0,0,0,13,0,9,0,9
+Pizza Service,com.prav.pizza.dto,PizzaSizeRequestDTO,0,3,0,0,0,1,0,1,0,1
+Pizza Service,com.prav.pizza.dto,PizzaSizeDTO,0,24,0,0,0,10,0,7,0,7
+Pizza Service,com.prav.pizza.dto,PizzaCreateRequestDTO,14,31,0,0,4,9,4,9,4,9
+Pizza Service,com.prav.pizza.dto,ToppingCreateRequestDTO,0,24,0,0,0,10,0,7,0,7
+Pizza Service,com.prav.pizza.aspect,LoggingAspect,145,0,0,0,22,0,4,0,4,0
+Pizza Service,com.prav.pizza.aspect,ApiLoggingAspect,407,0,38,0,82,0,30,0,11,0
+Pizza Service,com.prav.pizza.model,PizzaSize,0,31,0,0,0,13,0,9,0,9
+Pizza Service,com.prav.pizza.model,Pizza,0,87,0,0,0,35,0,21,0,21
+Pizza Service,com.prav.pizza.model,Topping,0,54,0,0,0,22,0,13,0,13
+Pizza Service,com.prav.pizza,PizzaServiceApplication,5,3,0,0,2,1,1,1,1,1

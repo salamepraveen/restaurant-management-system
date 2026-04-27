@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReportService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Order Service</a> &gt; <a href="index.source.html" class="el_package">com.prav.order.service</a> &gt; <span class="el_source">ReportService.java</span></div><h1>ReportService.java</h1><pre class="source lang-java linenums">package com.prav.order.service;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.prav.order.model.Order;
+import com.prav.order.model.OrderItem;
+import com.prav.order.repository.OrderItemRepository;
+import com.prav.order.repository.OrderRepository;
+
+@Service
+public class ReportService {
+
+    private final OrderRepository repo;
+    private final OrderItemRepository itemRepo;
+
+<span class="fc" id="L24">    public ReportService(OrderRepository repo, OrderItemRepository itemRepo) {</span>
+<span class="fc" id="L25">        this.repo = repo;</span>
+<span class="fc" id="L26">        this.itemRepo = itemRepo;</span>
+<span class="fc" id="L27">    }</span>
+
+    // ==================== Revenue by Restaurant ====================
+
+    public Map&lt;String, Object&gt; getRevenueByRestaurant(Long restaurantId) {
+<span class="fc" id="L32">        List&lt;Order&gt; orders = repo.findByRestaurantId(restaurantId);</span>
+
+<span class="fc" id="L34">        double totalRevenue = 0;</span>
+<span class="fc" id="L35">        int totalOrders = 0;</span>
+<span class="fc" id="L36">        int pendingOrders = 0;</span>
+<span class="fc" id="L37">        int completedOrders = 0;</span>
+<span class="fc" id="L38">        int cancelledOrders = 0;</span>
+
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        for (Order order : orders) {</span>
+<span class="fc" id="L41">            totalRevenue += order.getTotalAmount().doubleValue();</span>
+<span class="fc" id="L42">            totalOrders++;</span>
+<span class="pc bpc" id="L43" title="1 of 4 branches missed.">            switch (order.getStatus()) {</span>
+<span class="fc" id="L44">                case PLACED, CONFIRMED, PREPARING, OUT_FOR_DELIVERY -&gt; pendingOrders++;</span>
+<span class="fc" id="L45">                case DELIVERED -&gt; completedOrders++;</span>
+<span class="fc" id="L46">                case CANCELLED -&gt; cancelledOrders++;</span>
+            }
+<span class="fc" id="L48">        }</span>
+
+<span class="fc" id="L50">        Map&lt;String, Object&gt; report = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L51">        report.put(&quot;restaurantId&quot;, restaurantId);</span>
+<span class="fc" id="L52">        report.put(&quot;totalRevenue&quot;, round(totalRevenue));</span>
+<span class="fc" id="L53">        report.put(&quot;totalOrders&quot;, totalOrders);</span>
+<span class="fc" id="L54">        report.put(&quot;completedOrders&quot;, completedOrders);</span>
+<span class="fc" id="L55">        report.put(&quot;pendingOrders&quot;, pendingOrders);</span>
+<span class="fc" id="L56">        report.put(&quot;cancelledOrders&quot;, cancelledOrders);</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        report.put(&quot;averageOrderValue&quot;, totalOrders &gt; 0 ? round(totalRevenue / totalOrders) : 0);</span>
+<span class="fc" id="L58">        return report;</span>
+    }
+
+    // ==================== Revenue by Date Range ====================
+
+    public Map&lt;String, Object&gt; getRevenueByDateRange(Long restaurantId,
+            LocalDateTime startDate, LocalDateTime endDate) {
+<span class="fc" id="L65">        List&lt;Order&gt; allOrders = repo.findByRestaurantId(restaurantId);</span>
+
+<span class="fc" id="L67">        double totalRevenue = 0;</span>
+<span class="fc" id="L68">        int totalOrders = 0;</span>
+<span class="fc" id="L69">        List&lt;Order&gt; filteredOrders = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L71" title="All 2 branches covered.">        for (Order order : allOrders) {</span>
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">            if (order.getCreatedAt() != null</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">                    &amp;&amp; !order.getCreatedAt().isBefore(startDate)</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">                    &amp;&amp; !order.getCreatedAt().isAfter(endDate)</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">                    &amp;&amp; order.getStatus() != Order.OrderStatus.CANCELLED) {</span>
+<span class="fc" id="L76">                totalRevenue += order.getTotalAmount().doubleValue();</span>
+<span class="fc" id="L77">                totalOrders++;</span>
+<span class="fc" id="L78">                filteredOrders.add(order);</span>
+            }
+<span class="fc" id="L80">        }</span>
+
+<span class="fc" id="L82">        Map&lt;String, Object&gt; report = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L83">        report.put(&quot;restaurantId&quot;, restaurantId);</span>
+<span class="fc" id="L84">        report.put(&quot;startDate&quot;, startDate.toString());</span>
+<span class="fc" id="L85">        report.put(&quot;endDate&quot;, endDate.toString());</span>
+<span class="fc" id="L86">        report.put(&quot;totalRevenue&quot;, round(totalRevenue));</span>
+<span class="fc" id="L87">        report.put(&quot;totalOrders&quot;, totalOrders);</span>
+<span class="fc" id="L88">        report.put(&quot;orders&quot;, filteredOrders);</span>
+<span class="fc" id="L89">        return report;</span>
+    }
+
+    // ==================== Daily Revenue ====================
+
+    public List&lt;Map&lt;String, Object&gt;&gt; getDailyRevenue(Long restaurantId, int days) {
+<span class="fc" id="L95">        List&lt;Order&gt; orders = repo.findByRestaurantId(restaurantId);</span>
+<span class="fc" id="L96">        Map&lt;String, Double&gt; dailyMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L97">        Map&lt;String, Integer&gt; orderCountMap = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L99">        LocalDateTime cutoff = LocalDateTime.now().minusDays(days);</span>
+
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        for (Order order : orders) {</span>
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">            if (order.getCreatedAt() != null</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">                    &amp;&amp; !order.getCreatedAt().isBefore(cutoff)</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">                    &amp;&amp; order.getStatus() != Order.OrderStatus.CANCELLED) {</span>
+<span class="fc" id="L105">                String date = order.getCreatedAt().toLocalDate().toString();</span>
+<span class="fc" id="L106">                dailyMap.put(date, dailyMap.getOrDefault(date, 0.0) + order.getTotalAmount().doubleValue());</span>
+<span class="fc" id="L107">                orderCountMap.put(date, orderCountMap.getOrDefault(date, 0) + 1);</span>
+            }
+<span class="fc" id="L109">        }</span>
+
+<span class="fc" id="L111">        List&lt;Map&lt;String, Object&gt;&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        for (Map.Entry&lt;String, Double&gt; entry : dailyMap.entrySet()) {</span>
+<span class="fc" id="L113">            Map&lt;String, Object&gt; day = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L114">            day.put(&quot;date&quot;, entry.getKey());</span>
+<span class="fc" id="L115">            day.put(&quot;revenue&quot;, round(entry.getValue()));</span>
+<span class="fc" id="L116">            day.put(&quot;orders&quot;, orderCountMap.get(entry.getKey()));</span>
+<span class="fc" id="L117">            result.add(day);</span>
+<span class="fc" id="L118">        }</span>
+
+<span class="fc" id="L120">        result.sort((a, b) -&gt; ((String) a.get(&quot;date&quot;)).compareTo((String) b.get(&quot;date&quot;)));</span>
+<span class="fc" id="L121">        return result;</span>
+    }
+
+    // ==================== Popular Pizzas ====================
+
+    public List&lt;Map&lt;String, Object&gt;&gt; getPopularPizzas(Long restaurantId) {
+<span class="fc" id="L127">        List&lt;Order&gt; orders = repo.findByRestaurantId(restaurantId);</span>
+
+<span class="fc" id="L129">        Map&lt;String, Integer&gt; pizzaCount = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L130">        Map&lt;String, Double&gt; pizzaRevenue = new HashMap&lt;&gt;();</span>
+
+<span class="fc bfc" id="L132" title="All 2 branches covered.">        for (Order order : orders) {</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">            if (order.getStatus() != Order.OrderStatus.CANCELLED) {</span>
+<span class="fc" id="L134">                List&lt;OrderItem&gt; items = itemRepo.findByOrderId(order.getId());</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">                for (OrderItem item : items) {</span>
+<span class="fc" id="L136">                    String name = item.getPizzaName();</span>
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">                    if (name != null) {</span>
+<span class="fc" id="L138">                        pizzaCount.put(name, pizzaCount.getOrDefault(name, 0) + item.getQuantity());</span>
+<span class="fc" id="L139">                        pizzaRevenue.put(name,</span>
+<span class="fc" id="L140">                                pizzaRevenue.getOrDefault(name, 0.0)</span>
+<span class="fc" id="L141">                                        + (item.getPrice().doubleValue() * item.getQuantity()));</span>
+                    }
+<span class="fc" id="L143">                }</span>
+            }
+<span class="fc" id="L145">        }</span>
+
+<span class="fc" id="L147">        List&lt;Map&lt;String, Object&gt;&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">        for (Map.Entry&lt;String, Integer&gt; entry : pizzaCount.entrySet()) {</span>
+<span class="fc" id="L149">            Map&lt;String, Object&gt; pizza = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L150">            pizza.put(&quot;pizzaName&quot;, entry.getKey());</span>
+<span class="fc" id="L151">            pizza.put(&quot;totalQuantitySold&quot;, entry.getValue());</span>
+<span class="fc" id="L152">            pizza.put(&quot;totalRevenue&quot;, round(pizzaRevenue.get(entry.getKey())));</span>
+<span class="fc" id="L153">            result.add(pizza);</span>
+<span class="fc" id="L154">        }</span>
+
+<span class="fc" id="L156">        result.sort((a, b) -&gt; (Integer) b.get(&quot;totalQuantitySold&quot;) - (Integer) a.get(&quot;totalQuantitySold&quot;));</span>
+<span class="fc" id="L157">        return result;</span>
+    }
+
+    // ==================== Top Customers ====================
+
+    public List&lt;Map&lt;String, Object&gt;&gt; getTopCustomers(Long restaurantId) {
+<span class="fc" id="L163">        List&lt;Order&gt; orders = repo.findByRestaurantId(restaurantId);</span>
+
+<span class="fc" id="L165">        Map&lt;Long, Double&gt; customerSpending = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L166">        Map&lt;Long, Integer&gt; customerOrderCount = new HashMap&lt;&gt;();</span>
+
+<span class="fc bfc" id="L168" title="All 2 branches covered.">        for (Order order : orders) {</span>
+<span class="pc bpc" id="L169" title="1 of 4 branches missed.">            if (order.getUserId() != null &amp;&amp; order.getStatus() != Order.OrderStatus.CANCELLED) {</span>
+<span class="fc" id="L170">                customerSpending.put(order.getUserId(),</span>
+<span class="fc" id="L171">                        customerSpending.getOrDefault(order.getUserId(), 0.0)</span>
+<span class="fc" id="L172">                                + order.getTotalAmount().doubleValue());</span>
+<span class="fc" id="L173">                customerOrderCount.put(order.getUserId(),</span>
+<span class="fc" id="L174">                        customerOrderCount.getOrDefault(order.getUserId(), 0) + 1);</span>
+            }
+<span class="fc" id="L176">        }</span>
+
+<span class="fc" id="L178">        List&lt;Map&lt;String, Object&gt;&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">        for (Map.Entry&lt;Long, Double&gt; entry : customerSpending.entrySet()) {</span>
+<span class="fc" id="L180">            Map&lt;String, Object&gt; customer = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L181">            customer.put(&quot;userId&quot;, entry.getKey());</span>
+<span class="fc" id="L182">            customer.put(&quot;totalSpent&quot;, round(entry.getValue()));</span>
+<span class="fc" id="L183">            customer.put(&quot;totalOrders&quot;, customerOrderCount.get(entry.getKey()));</span>
+<span class="fc" id="L184">            result.add(customer);</span>
+<span class="fc" id="L185">        }</span>
+
+<span class="pc" id="L187">        result.sort((a, b) -&gt; Double.compare((Double) b.get(&quot;totalSpent&quot;), (Double) a.get(&quot;totalSpent&quot;)));</span>
+<span class="fc" id="L188">        return result;</span>
+    }
+
+    // ==================== Order Status Summary ====================
+
+    public Map&lt;String, Object&gt; getOrderStatusSummary(Long restaurantId) {
+<span class="fc" id="L194">        List&lt;Order&gt; orders = repo.findByRestaurantId(restaurantId);</span>
+
+<span class="fc" id="L196">        int placed = 0, confirmed = 0, preparing = 0, outForDelivery = 0;</span>
+<span class="fc" id="L197">        int delivered = 0, cancelled = 0;</span>
+
+<span class="fc bfc" id="L199" title="All 2 branches covered.">        for (Order order : orders) {</span>
+<span class="pc bpc" id="L200" title="4 of 7 branches missed.">            switch (order.getStatus()) {</span>
+<span class="nc" id="L201">                case PLACED -&gt; placed++;</span>
+<span class="nc" id="L202">                case CONFIRMED -&gt; confirmed++;</span>
+<span class="fc" id="L203">                case PREPARING -&gt; preparing++;</span>
+<span class="nc" id="L204">                case OUT_FOR_DELIVERY -&gt; outForDelivery++;</span>
+<span class="fc" id="L205">                case DELIVERED -&gt; delivered++;</span>
+<span class="fc" id="L206">                case CANCELLED -&gt; cancelled++;</span>
+            }
+<span class="fc" id="L208">        }</span>
+
+<span class="fc" id="L210">        Map&lt;String, Object&gt; summary = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L211">        summary.put(&quot;placed&quot;, placed);</span>
+<span class="fc" id="L212">        summary.put(&quot;confirmed&quot;, confirmed);</span>
+<span class="fc" id="L213">        summary.put(&quot;preparing&quot;, preparing);</span>
+<span class="fc" id="L214">        summary.put(&quot;outForDelivery&quot;, outForDelivery);</span>
+<span class="fc" id="L215">        summary.put(&quot;delivered&quot;, delivered);</span>
+<span class="fc" id="L216">        summary.put(&quot;cancelled&quot;, cancelled);</span>
+<span class="fc" id="L217">        summary.put(&quot;total&quot;, orders.size());</span>
+<span class="fc" id="L218">        return summary;</span>
+    }
+
+    // ==================== Helper ====================
+
+    private double round(double value) {
+<span class="fc" id="L224">        return BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP).doubleValue();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

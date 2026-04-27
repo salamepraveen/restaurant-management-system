@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OrderServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Order Service</a> &gt; <a href="index.source.html" class="el_package">com.prav.order.service</a> &gt; <span class="el_source">OrderServiceImpl.java</span></div><h1>OrderServiceImpl.java</h1><pre class="source lang-java linenums">package com.prav.order.service;
+
+import com.prav.common.exception.BadRequestException;
+import com.prav.common.exception.ResourceNotFoundException;
+import com.prav.order.client.PizzaClient;
+import com.prav.order.dto.*;
+import com.prav.order.model.Order;
+import com.prav.order.model.OrderItem;
+import com.prav.order.repository.OrderItemRepository;
+import com.prav.order.repository.OrderRepository;
+import com.prav.order.service.OrderService;
+import com.prav.order.service.RazorpayPaymentService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+public class OrderServiceImpl implements OrderService {
+ 
+<span class="fc" id="L29">    private static final Logger log = LoggerFactory.getLogger(OrderServiceImpl.class);</span>
+    private static final String BORDER = &quot;========================================&quot;;
+
+    private final OrderRepository orderRepo;
+    private final OrderItemRepository orderItemRepo;
+    private final PizzaClient pizzaClient;
+    private final RazorpayPaymentService paymentService;
+    private final String paymentMode;
+
+    public OrderServiceImpl(
+            OrderRepository orderRepo,
+            OrderItemRepository orderItemRepo,
+            PizzaClient pizzaClient,
+            RazorpayPaymentService paymentService,
+<span class="fc" id="L43">            @Value(&quot;${payment.mode:dummy}&quot;) String paymentMode) {</span>
+<span class="fc" id="L44">        this.orderRepo = orderRepo;</span>
+<span class="fc" id="L45">        this.orderItemRepo = orderItemRepo;</span>
+<span class="fc" id="L46">        this.pizzaClient = pizzaClient;</span>
+<span class="fc" id="L47">        this.paymentService = paymentService;</span>
+<span class="fc" id="L48">        this.paymentMode = paymentMode;</span>
+<span class="fc" id="L49">    }</span>
+
+    // ==================== PLACE ORDER ====================
+
+    @Override
+    @Transactional
+    public OrderResponseDTO placeOrder(Long userId, Long restaurantId, String deliveryAddress, String paymentMethod, List&lt;Map&lt;String, Object&gt;&gt; items) {
+<span class="fc" id="L56">        log.info(&quot;  [ORDER] Placing order for user: {}, restaurant: {}&quot;, userId, restaurantId);</span>
+
+<span class="fc" id="L58">        BigDecimal totalAmount = BigDecimal.ZERO;</span>
+<span class="fc" id="L59">        List&lt;OrderItem&gt; orderItems = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        for (Map&lt;String, Object&gt; itemMap : items) {</span>
+<span class="fc" id="L62">            Long pizzaId = ((Number) itemMap.get(&quot;pizzaId&quot;)).longValue();</span>
+<span class="fc" id="L63">            int quantity = ((Number) itemMap.get(&quot;quantity&quot;)).intValue();</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">            String size = itemMap.get(&quot;size&quot;) != null ? itemMap.get(&quot;size&quot;).toString() : &quot;REGULAR&quot;;</span>
+<span class="fc" id="L65">            List&lt;String&gt; toppingsList = (List&lt;String&gt;) itemMap.get(&quot;toppings&quot;);</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">            String toppingsStr = toppingsList != null ? String.join(&quot;, &quot;, toppingsList) : &quot;&quot;;</span>
+
+<span class="fc" id="L68">            Map&lt;String, Object&gt; pizzaData = pizzaClient.getPizzaById(pizzaId);</span>
+<span class="fc" id="L69">            Object availableObj = pizzaData.get(&quot;available&quot;);</span>
+<span class="pc bpc" id="L70" title="1 of 4 branches missed.">            boolean available = availableObj != null &amp;&amp; Boolean.parseBoolean(availableObj.toString());</span>
+
+<span class="fc bfc" id="L72" title="All 2 branches covered.">            if (!available) {</span>
+<span class="fc" id="L73">                throw new BadRequestException(&quot;Pizza '&quot; + pizzaData.get(&quot;name&quot;) + &quot;' is currently not available!&quot;);</span>
+            }
+
+<span class="fc" id="L76">            Number basePriceNum = (Number) pizzaData.get(&quot;basePrice&quot;);</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">            if (basePriceNum == null) basePriceNum = (Number) pizzaData.get(&quot;price&quot;); // Fallback</span>
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">            double basePrice = basePriceNum != null ? basePriceNum.doubleValue() : 0.0;</span>
+<span class="fc" id="L79">            String pizzaName = (String) pizzaData.get(&quot;name&quot;);</span>
+            
+<span class="fc" id="L81">            double sizePrice = 0.0;</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">            if (pizzaData.get(&quot;sizes&quot;) != null) {</span>
+<span class="fc" id="L83">                List&lt;Map&lt;String, Object&gt;&gt; pizzaSizes = (List&lt;Map&lt;String, Object&gt;&gt;) pizzaData.get(&quot;sizes&quot;);</span>
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">                for (Map&lt;String, Object&gt; s : pizzaSizes) {</span>
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">                    if (size.equalsIgnoreCase((String) s.get(&quot;size&quot;))) {</span>
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">                        sizePrice = s.get(&quot;price&quot;) != null ? ((Number) s.get(&quot;price&quot;)).doubleValue() : 0.0;</span>
+<span class="fc" id="L87">                        break;</span>
+                    }
+<span class="nc" id="L89">                }</span>
+            }
+            
+<span class="fc" id="L92">            double toppingsPrice = 0.0;</span>
+<span class="pc bpc" id="L93" title="1 of 4 branches missed.">            if (toppingsList != null &amp;&amp; !toppingsList.isEmpty()) {</span>
+<span class="fc" id="L94">                Map&lt;String, Object&gt; response = pizzaClient.getAllToppings();</span>
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">                if (response.get(&quot;data&quot;) != null) {</span>
+<span class="fc" id="L96">                    List&lt;Map&lt;String, Object&gt;&gt; allToppings = (List&lt;Map&lt;String, Object&gt;&gt;) response.get(&quot;data&quot;);</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">                    for (String tName : toppingsList) {</span>
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">                        for (Map&lt;String, Object&gt; pt : allToppings) {</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">                            if (tName.equalsIgnoreCase((String) pt.get(&quot;name&quot;))) {</span>
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">                                toppingsPrice += pt.get(&quot;price&quot;) != null ? ((Number) pt.get(&quot;price&quot;)).doubleValue() : 50.0;</span>
+<span class="fc" id="L101">                                break;</span>
+                            }
+<span class="nc" id="L103">                        }</span>
+<span class="fc" id="L104">                    }</span>
+                }
+            }
+<span class="fc" id="L107">            double finalPrice = basePrice + sizePrice + toppingsPrice;</span>
+
+<span class="fc" id="L109">            OrderItem orderItem = new OrderItem();</span>
+<span class="fc" id="L110">            orderItem.setPizzaId(pizzaId);</span>
+<span class="fc" id="L111">            orderItem.setPizzaName(pizzaName);</span>
+<span class="fc" id="L112">            orderItem.setQuantity(quantity);</span>
+<span class="fc" id="L113">            orderItem.setPrice(finalPrice);</span>
+<span class="fc" id="L114">            orderItem.setSize(size);</span>
+<span class="fc" id="L115">            orderItem.setToppings(toppingsStr);</span>
+
+<span class="fc" id="L117">            orderItems.add(orderItem);</span>
+<span class="fc" id="L118">            totalAmount = totalAmount.add(BigDecimal.valueOf(finalPrice * quantity));</span>
+<span class="fc" id="L119">        }</span>
+
+<span class="fc" id="L121">        Order order = new Order();</span>
+<span class="fc" id="L122">        order.setUserId(userId);</span>
+<span class="fc" id="L123">        order.setRestaurantId(restaurantId);</span>
+<span class="fc" id="L124">        order.setDeliveryAddress(deliveryAddress);</span>
+<span class="fc" id="L125">        order.setPaymentMethod(paymentMethod);</span>
+<span class="fc" id="L126">        order.setTotalAmount(totalAmount);</span>
+<span class="fc" id="L127">        order = orderRepo.save(order);</span>
+
+<span class="fc bfc" id="L129" title="All 2 branches covered.">        for (OrderItem item : orderItems) {</span>
+<span class="fc" id="L130">            item.setOrder(order);</span>
+<span class="fc" id="L131">            orderItemRepo.save(item);</span>
+<span class="fc" id="L132">        }</span>
+<span class="fc" id="L133">        order.setOrderItems(orderItems);</span>
+
+<span class="fc" id="L135">        log.info(&quot;  [ORDER] Order {} created. Total: {}&quot;, order.getId(), totalAmount);</span>
+<span class="fc" id="L136">        return convertToDTO(order);</span>
+    }
+
+    // ==================== GET ORDERS ====================
+
+    @Override
+    public List&lt;OrderResponseDTO&gt; getMyOrders(Long userId) {
+<span class="fc" id="L143">        return orderRepo.findByUserId(userId).stream()</span>
+<span class="fc" id="L144">                .map(this::convertToDTO)</span>
+<span class="fc" id="L145">                .collect(Collectors.toList());</span>
+    }
+
+    @Override
+    public List&lt;OrderResponseDTO&gt; getRestaurantOrders(Long restaurantId) {
+<span class="fc" id="L150">        return orderRepo.findByRestaurantId(restaurantId).stream()</span>
+<span class="fc" id="L151">                .map(this::convertToDTO)</span>
+<span class="fc" id="L152">                .collect(Collectors.toList());</span>
+    }
+
+    @Override
+    public OrderResponseDTO getOrderById(Long id) {
+<span class="fc" id="L157">        Order order = orderRepo.findById(id)</span>
+<span class="fc" id="L158">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Order&quot;, &quot;id&quot;, id));</span>
+<span class="fc" id="L159">        return convertToDTO(order);</span>
+    }
+
+    @Override
+    public List&lt;OrderItemResponseDTO&gt; getOrderItems(Long id) {
+<span class="fc" id="L164">        return orderItemRepo.findByOrderId(id).stream()</span>
+<span class="fc" id="L165">                .map(item -&gt; OrderItemResponseDTO.builder()</span>
+<span class="fc" id="L166">                        .pizzaId(item.getPizzaId())</span>
+<span class="fc" id="L167">                        .pizzaName(item.getPizzaName())</span>
+<span class="fc" id="L168">                        .size(item.getSize())</span>
+<span class="fc" id="L169">                        .quantity(item.getQuantity())</span>
+<span class="fc" id="L170">                        .price(item.getPrice())</span>
+<span class="fc" id="L171">                        .toppings(item.getToppings())</span>
+<span class="fc" id="L172">                        .build())</span>
+<span class="fc" id="L173">                .collect(Collectors.toList());</span>
+    }
+
+    // ==================== UPDATE STATUS ====================
+
+    @Override
+    public OrderResponseDTO updateStatus(Long id, String status) {
+<span class="fc" id="L180">        Order order = orderRepo.findById(id)</span>
+<span class="fc" id="L181">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Order&quot;, &quot;id&quot;, id));</span>
+
+        Order.OrderStatus newStatus;
+        try {
+<span class="fc" id="L185">            newStatus = Order.OrderStatus.valueOf(status.toUpperCase());</span>
+<span class="fc" id="L186">        } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L187">            throw new BadRequestException(&quot;Invalid status: &quot; + status + &quot;. Valid: PLACED, CONFIRMED, PREPARING, OUT_FOR_DELIVERY, DELIVERED, CANCELLED&quot;);</span>
+<span class="fc" id="L188">        }</span>
+
+<span class="pc bpc" id="L190" title="2 of 4 branches missed.">        if (order.getStatus() == Order.OrderStatus.CANCELLED || order.getStatus() == Order.OrderStatus.DELIVERED) {</span>
+<span class="nc" id="L191">            throw new BadRequestException(&quot;Cannot change status of &quot; + order.getStatus() + &quot; order&quot;);</span>
+        }
+
+<span class="pc bpc" id="L194" title="3 of 6 branches missed.">        switch (newStatus) {</span>
+            case CONFIRMED:
+<span class="pc bpc" id="L196" title="1 of 2 branches missed.">                if (order.getStatus() != Order.OrderStatus.PLACED)</span>
+<span class="nc" id="L197">                    throw new BadRequestException(&quot;Only PLACED orders can be CONFIRMED&quot;);</span>
+                break;
+            case PREPARING:
+<span class="fc bfc" id="L200" title="All 2 branches covered.">                if (order.getStatus() != Order.OrderStatus.CONFIRMED)</span>
+<span class="fc" id="L201">                    throw new BadRequestException(&quot;Only CONFIRMED orders can move to PREPARING&quot;);</span>
+                break;
+            case OUT_FOR_DELIVERY:
+<span class="nc bnc" id="L204" title="All 2 branches missed.">                if (order.getStatus() != Order.OrderStatus.PREPARING)</span>
+<span class="nc" id="L205">                    throw new BadRequestException(&quot;Only PREPARING orders can move to OUT_FOR_DELIVERY&quot;);</span>
+                break;
+            case DELIVERED:
+<span class="pc bpc" id="L208" title="1 of 2 branches missed.">                if (order.getStatus() != Order.OrderStatus.OUT_FOR_DELIVERY)</span>
+<span class="nc" id="L209">                    throw new BadRequestException(&quot;Only OUT_FOR_DELIVERY orders can be DELIVERED&quot;);</span>
+                break;
+            case CANCELLED:
+<span class="nc bnc" id="L212" title="All 2 branches missed.">                if (order.getStatus() == Order.OrderStatus.DELIVERED)</span>
+<span class="nc" id="L213">                    throw new BadRequestException(&quot;Cannot cancel a DELIVERED order&quot;);</span>
+                break;
+        }
+
+<span class="fc" id="L217">        order.setStatus(newStatus);</span>
+<span class="fc" id="L218">        order = orderRepo.save(order);</span>
+<span class="fc" id="L219">        log.info(&quot;  [ORDER] Order {} status: {}&quot;, id, newStatus);</span>
+<span class="fc" id="L220">        return convertToDTO(order);</span>
+    }
+
+    // ==================== PAYMENT ====================
+
+    @Override
+    public PaymentOrderResponseDTO createPaymentOrder(Long orderId) {
+<span class="fc" id="L227">        Order order = orderRepo.findById(orderId)</span>
+<span class="pc" id="L228">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Order&quot;, &quot;id&quot;, orderId));</span>
+
+<span class="pc bpc" id="L230" title="1 of 2 branches missed.">        if (order.getStatus() == Order.OrderStatus.CANCELLED)</span>
+<span class="nc" id="L231">            throw new BadRequestException(&quot;Cannot pay for cancelled order&quot;);</span>
+<span class="pc bpc" id="L232" title="1 of 2 branches missed.">        if (order.getPaymentStatus() == Order.PaymentStatus.COMPLETED)</span>
+<span class="nc" id="L233">            throw new BadRequestException(&quot;Payment already completed&quot;);</span>
+
+<span class="fc bfc" id="L235" title="All 2 branches covered.">        if (&quot;dummy&quot;.equals(paymentMode)) {</span>
+            // ========== DUMMY MODE ==========
+<span class="fc" id="L237">            String fakeOrderId = &quot;order_dummy_&quot; + System.currentTimeMillis();</span>
+<span class="fc" id="L238">            order.setRazorpayOrderId(fakeOrderId);</span>
+<span class="fc" id="L239">            orderRepo.save(order);</span>
+
+<span class="pc bpc" id="L241" title="1 of 2 branches missed.">        if (log.isInfoEnabled()) {</span>
+<span class="fc" id="L242">            log.info(BORDER);</span>
+<span class="fc" id="L243">            log.info(&quot;  [DUMMY] PAYMENT ORDER CREATED&quot;);</span>
+<span class="fc" id="L244">            log.info(&quot;  Order ID: {}&quot;, orderId);</span>
+<span class="fc" id="L245">            log.info(&quot;  Fake Razorpay ID: {}&quot;, fakeOrderId);</span>
+<span class="fc" id="L246">            log.info(&quot;  Amount: {}&quot;, order.getTotalAmount());</span>
+<span class="fc" id="L247">            log.info(BORDER);</span>
+        }
+
+<span class="fc" id="L250">            return PaymentOrderResponseDTO.builder()</span>
+<span class="fc" id="L251">                    .razorpayOrderId(fakeOrderId)</span>
+<span class="fc" id="L252">                    .amount(order.getTotalAmount())</span>
+<span class="fc" id="L253">                    .currency(&quot;INR&quot;)</span>
+<span class="fc" id="L254">                    .key(&quot;rzp_test_dummy_key&quot;)</span>
+<span class="fc" id="L255">                    .orderStatus(&quot;created&quot;)</span>
+<span class="fc" id="L256">                    .orderId(order.getId())</span>
+<span class="fc" id="L257">                    .build();</span>
+        }
+
+        // ========== REAL RAZORPAY MODE ==========
+<span class="fc" id="L261">        com.razorpay.Order rzpOrder = paymentService.createRazorpayOrder(orderId, order.getTotalAmount());</span>
+<span class="fc" id="L262">        order.setRazorpayOrderId(rzpOrder.get(&quot;id&quot;).toString());</span>
+<span class="fc" id="L263">        orderRepo.save(order);</span>
+
+<span class="fc" id="L265">        return PaymentOrderResponseDTO.builder()</span>
+<span class="fc" id="L266">                .razorpayOrderId(rzpOrder.get(&quot;id&quot;).toString())</span>
+<span class="fc" id="L267">                .amount(order.getTotalAmount())</span>
+<span class="fc" id="L268">                .currency(&quot;INR&quot;)</span>
+<span class="fc" id="L269">                .key(paymentService.getKeyId())</span>
+<span class="fc" id="L270">                .orderStatus(rzpOrder.get(&quot;status&quot;).toString())</span>
+<span class="fc" id="L271">                .orderId(order.getId())</span>
+<span class="fc" id="L272">                .build();</span>
+    }
+
+    @Override
+    @Transactional
+    public OrderResponseDTO verifyPayment(Long orderId, PaymentVerifyRequestDTO request) {
+<span class="fc" id="L278">        Order order = orderRepo.findById(orderId)</span>
+<span class="pc" id="L279">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Order&quot;, &quot;id&quot;, orderId));</span>
+
+<span class="pc bpc" id="L281" title="1 of 2 branches missed.">        if (order.getPaymentStatus() == Order.PaymentStatus.COMPLETED)</span>
+<span class="nc" id="L282">            throw new BadRequestException(&quot;Payment already completed&quot;);</span>
+
+<span class="fc bfc" id="L284" title="All 2 branches covered.">        if (&quot;dummy&quot;.equals(paymentMode)) {</span>
+            // ========== DUMMY MODE ==========
+<span class="fc" id="L286">            order.setRazorpayPaymentId(&quot;pay_dummy_&quot; + System.currentTimeMillis());</span>
+<span class="fc" id="L287">            order.setRazorpaySignature(&quot;dummy_sig_&quot; + System.currentTimeMillis());</span>
+<span class="fc" id="L288">            order.setPaymentStatus(Order.PaymentStatus.COMPLETED);</span>
+<span class="fc" id="L289">            order.setStatus(Order.OrderStatus.CONFIRMED);</span>
+<span class="fc" id="L290">            order = orderRepo.save(order);</span>
+
+<span class="pc bpc" id="L292" title="1 of 2 branches missed.">        if (log.isInfoEnabled()) {</span>
+<span class="fc" id="L293">            log.info(BORDER);</span>
+<span class="fc" id="L294">            log.info(&quot;  [DUMMY] PAYMENT VERIFIED &amp; ORDER CONFIRMED&quot;);</span>
+<span class="fc" id="L295">            log.info(&quot;  Order: {}&quot;, orderId);</span>
+<span class="fc" id="L296">            log.info(BORDER);</span>
+        }
+
+<span class="fc" id="L299">            return convertToDTO(order);</span>
+        }
+
+        // ========== REAL RAZORPAY MODE ==========
+<span class="fc" id="L303">        boolean isValid = paymentService.verifyPayment(</span>
+<span class="fc" id="L304">                request.getRazorpayOrderId(),</span>
+<span class="fc" id="L305">                request.getRazorpayPaymentId(),</span>
+<span class="fc" id="L306">                request.getRazorpaySignature());</span>
+
+<span class="fc bfc" id="L308" title="All 2 branches covered.">        if (!isValid) {</span>
+<span class="fc" id="L309">            order.setPaymentStatus(Order.PaymentStatus.FAILED);</span>
+<span class="fc" id="L310">            orderRepo.save(order);</span>
+<span class="fc" id="L311">            throw new BadRequestException(&quot;Payment verification failed! Invalid signature.&quot;);</span>
+        }
+
+<span class="fc" id="L314">        order.setRazorpayPaymentId(request.getRazorpayPaymentId());</span>
+<span class="fc" id="L315">        order.setRazorpaySignature(request.getRazorpaySignature());</span>
+<span class="fc" id="L316">        order.setPaymentStatus(Order.PaymentStatus.COMPLETED);</span>
+<span class="fc" id="L317">        order.setStatus(Order.OrderStatus.CONFIRMED);</span>
+<span class="fc" id="L318">        order = orderRepo.save(order);</span>
+
+<span class="pc bpc" id="L320" title="1 of 2 branches missed.">        if (log.isInfoEnabled()) {</span>
+<span class="fc" id="L321">            log.info(BORDER);</span>
+<span class="fc" id="L322">            log.info(&quot;  PAYMENT VERIFIED &amp; ORDER CONFIRMED&quot;);</span>
+<span class="fc" id="L323">            log.info(&quot;  Order: {} | Payment: {}&quot;, orderId, request.getRazorpayPaymentId());</span>
+<span class="fc" id="L324">            log.info(BORDER);</span>
+        }
+
+<span class="fc" id="L327">        return convertToDTO(order);</span>
+    }
+
+    // ==================== CANCEL ====================
+
+    @Override
+    @Transactional
+    public OrderResponseDTO cancelOrder(Long orderId, Long userId, String reason) {
+<span class="fc" id="L335">        Order order = orderRepo.findById(orderId)</span>
+<span class="pc" id="L336">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Order&quot;, &quot;id&quot;, orderId));</span>
+
+<span class="fc bfc" id="L338" title="All 2 branches covered.">        if (!order.getUserId().equals(userId))</span>
+<span class="fc" id="L339">            throw new BadRequestException(&quot;You can only cancel your own orders&quot;);</span>
+<span class="fc bfc" id="L340" title="All 2 branches covered.">        if (order.getStatus() == Order.OrderStatus.CANCELLED)</span>
+<span class="fc" id="L341">            throw new BadRequestException(&quot;Order is already cancelled&quot;);</span>
+<span class="fc bfc" id="L342" title="All 2 branches covered.">        if (order.getStatus() == Order.OrderStatus.DELIVERED)</span>
+<span class="fc" id="L343">            throw new BadRequestException(&quot;Cannot cancel a delivered order&quot;);</span>
+
+<span class="fc" id="L345">        order.setStatus(Order.OrderStatus.CANCELLED);</span>
+<span class="fc" id="L346">        order.setCancellationReason(reason);</span>
+
+<span class="pc bpc" id="L348" title="1 of 4 branches missed.">        if (order.getPaymentStatus() == Order.PaymentStatus.COMPLETED &amp;&amp; order.getRazorpayPaymentId() != null) {</span>
+<span class="fc" id="L349">            log.info(&quot;  [CANCEL] Payment done. Processing refund...&quot;);</span>
+
+<span class="fc bfc" id="L351" title="All 2 branches covered.">            if (&quot;dummy&quot;.equals(paymentMode)) {</span>
+                // ========== DUMMY REFUND ==========
+<span class="fc" id="L353">                BigDecimal refundAmount = order.getTotalAmount().multiply(BigDecimal.valueOf(0.70));</span>
+<span class="fc" id="L354">                BigDecimal deduction = order.getTotalAmount().subtract(refundAmount);</span>
+<span class="fc" id="L355">                order.setRefundAmount(refundAmount);</span>
+<span class="fc" id="L356">                order.setRefundId(&quot;refund_dummy_&quot; + System.currentTimeMillis());</span>
+<span class="fc" id="L357">                order.setPaymentStatus(Order.PaymentStatus.PARTIALLY_REFUNDED);</span>
+<span class="fc" id="L358">                log.info(&quot;  [DUMMY] Refund (70%): {} | Deduction: {}&quot;, refundAmount, deduction);</span>
+<span class="fc" id="L359">            } else {</span>
+                // ========== REAL RAZORPAY REFUND ==========
+<span class="fc" id="L361">                RefundResponseDTO refund = paymentService.processRefund(order.getId(), order.getTotalAmount(), order.getRazorpayPaymentId());</span>
+<span class="fc" id="L362">                order.setRefundAmount(refund.getRefundAmount());</span>
+<span class="fc" id="L363">                order.setRefundId(refund.getRefundId());</span>
+<span class="fc" id="L364">                order.setPaymentStatus(Order.PaymentStatus.PARTIALLY_REFUNDED);</span>
+<span class="fc" id="L365">                log.info(&quot;  [CANCEL] Refund: {}&quot;, refund.getRefundAmount());</span>
+<span class="fc" id="L366">            }</span>
+        } else {
+<span class="fc" id="L368">            log.info(&quot;  [CANCEL] No payment. No refund needed.&quot;);</span>
+        }
+
+<span class="fc" id="L371">        order = orderRepo.save(order);</span>
+
+<span class="pc bpc" id="L373" title="1 of 2 branches missed.">        if (log.isInfoEnabled()) {</span>
+<span class="fc" id="L374">            log.info(BORDER);</span>
+<span class="fc" id="L375">            log.info(&quot;  ORDER CANCELLED: {}&quot;, orderId);</span>
+<span class="fc" id="L376">            log.info(&quot;  Reason: {}&quot;, reason);</span>
+<span class="fc bfc" id="L377" title="All 2 branches covered.">            log.info(&quot;  Refund: {}&quot;, (order.getRefundAmount() != null ? order.getRefundAmount() : &quot;0 (no payment)&quot;));</span>
+<span class="fc" id="L378">            log.info(BORDER);</span>
+        }
+
+<span class="fc" id="L381">        return convertToDTO(order);</span>
+    }
+
+    // ==================== CONVERTER ====================
+
+    private OrderResponseDTO convertToDTO(Order order) {
+<span class="fc" id="L387">        List&lt;OrderItemResponseDTO&gt; itemDTOs = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L388" title="All 2 branches covered.">        if (order.getOrderItems() != null) {</span>
+<span class="fc" id="L389">            itemDTOs = order.getOrderItems().stream()</span>
+<span class="fc" id="L390">                    .map(item -&gt; OrderItemResponseDTO.builder()</span>
+<span class="fc" id="L391">                            .pizzaId(item.getPizzaId())</span>
+<span class="fc" id="L392">                            .pizzaName(item.getPizzaName())</span>
+<span class="fc" id="L393">                            .size(item.getSize())</span>
+<span class="fc" id="L394">                            .quantity(item.getQuantity())</span>
+<span class="fc" id="L395">                            .price(item.getPrice())</span>
+<span class="fc" id="L396">                            .toppings(item.getToppings())</span>
+<span class="fc" id="L397">                            .build())</span>
+<span class="fc" id="L398">                    .collect(Collectors.toList());</span>
+        }
+
+<span class="fc" id="L401">        return OrderResponseDTO.builder()</span>
+<span class="fc" id="L402">                .id(order.getId())</span>
+<span class="fc" id="L403">                .userId(order.getUserId())</span>
+<span class="fc" id="L404">                .restaurantId(order.getRestaurantId())</span>
+<span class="fc" id="L405">                .deliveryAddress(order.getDeliveryAddress())</span>
+<span class="fc" id="L406">                .paymentMethod(order.getPaymentMethod())</span>
+<span class="fc" id="L407">                .totalAmount(order.getTotalAmount())</span>
+<span class="fc" id="L408">                .status(order.getStatus())</span>
+<span class="fc" id="L409">                .paymentStatus(order.getPaymentStatus())</span>
+<span class="fc" id="L410">                .razorpayOrderId(order.getRazorpayOrderId())</span>
+<span class="fc" id="L411">                .razorpayPaymentId(order.getRazorpayPaymentId())</span>
+<span class="fc" id="L412">                .refundAmount(order.getRefundAmount())</span>
+<span class="fc" id="L413">                .refundId(order.getRefundId())</span>
+<span class="fc" id="L414">                .cancellationReason(order.getCancellationReason())</span>
+<span class="fc" id="L415">                .createdAt(order.getCreatedAt())</span>
+<span class="fc" id="L416">                .items(itemDTOs)</span>
+<span class="fc" id="L417">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

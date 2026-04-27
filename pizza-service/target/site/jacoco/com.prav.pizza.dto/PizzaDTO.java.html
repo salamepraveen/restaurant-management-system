@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PizzaDTO.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Pizza Service</a> &gt; <a href="index.source.html" class="el_package">com.prav.pizza.dto</a> &gt; <span class="el_source">PizzaDTO.java</span></div><h1>PizzaDTO.java</h1><pre class="source lang-java linenums">package com.prav.pizza.dto;
+
+import java.util.List;
+
+<span class="fc" id="L5">public class PizzaDTO {</span>
+
+    private Long id;
+    private String name;
+    private String description;
+    private String imageUrl;
+    private Boolean vegetarian;
+    private Long restaurantId;
+    private Double basePrice;
+    private Boolean isAvailable;
+    private List&lt;PizzaSizeDTO&gt; sizes;
+    private List&lt;ToppingDTO&gt; toppings;
+	public Long getId() {
+<span class="fc" id="L18">		return id;</span>
+	}
+	public void setId(Long id) {
+<span class="fc" id="L21">		this.id = id;</span>
+<span class="fc" id="L22">	}</span>
+	public String getName() {
+<span class="fc" id="L24">		return name;</span>
+	}
+	public void setName(String name) {
+<span class="fc" id="L27">		this.name = name;</span>
+<span class="fc" id="L28">	}</span>
+	public String getDescription() {
+<span class="fc" id="L30">		return description;</span>
+	}
+	public Double getBasePrice() {
+<span class="fc" id="L33">		return basePrice;</span>
+	}
+	public void setBasePrice(Double basePrice) {
+<span class="fc" id="L36">		this.basePrice = basePrice;</span>
+<span class="fc" id="L37">	}</span>
+	public Boolean getIsAvailable() {
+<span class="fc" id="L39">		return isAvailable;</span>
+	}
+	public void setIsAvailable(Boolean isAvailable) {
+<span class="fc" id="L42">		this.isAvailable = isAvailable;</span>
+<span class="fc" id="L43">	}</span>
+	public void setDescription(String description) {
+<span class="fc" id="L45">		this.description = description;</span>
+<span class="fc" id="L46">	}</span>
+	public String getImageUrl() {
+<span class="fc" id="L48">		return imageUrl;</span>
+	}
+	public void setImageUrl(String imageUrl) {
+<span class="fc" id="L51">		this.imageUrl = imageUrl;</span>
+<span class="fc" id="L52">	}</span>
+	public Boolean getVegetarian() {
+<span class="fc" id="L54">		return vegetarian;</span>
+	}
+	public void setVegetarian(Boolean vegetarian) {
+<span class="fc" id="L57">		this.vegetarian = vegetarian;</span>
+<span class="fc" id="L58">	}</span>
+	public Long getRestaurantId() {
+<span class="fc" id="L60">		return restaurantId;</span>
+	}
+	public void setRestaurantId(Long restaurantId) {
+<span class="fc" id="L63">		this.restaurantId = restaurantId;</span>
+<span class="fc" id="L64">	}</span>
+	public List&lt;PizzaSizeDTO&gt; getSizes() {
+<span class="fc" id="L66">		return sizes;</span>
+	}
+	public void setSizes(List&lt;PizzaSizeDTO&gt; sizes) {
+<span class="fc" id="L69">		this.sizes = sizes;</span>
+<span class="fc" id="L70">	}</span>
+	public List&lt;ToppingDTO&gt; getToppings() {
+<span class="fc" id="L72">		return toppings;</span>
+	}
+	public void setToppings(List&lt;ToppingDTO&gt; toppings) {
+<span class="fc" id="L75">		this.toppings = toppings;</span>
+<span class="fc" id="L76">	}</span>
+
+    
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

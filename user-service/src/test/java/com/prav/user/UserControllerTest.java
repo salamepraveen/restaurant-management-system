@@ -13,7 +13,6 @@ import com.prav.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
@@ -41,7 +40,6 @@ class UserControllerTest {
     @Mock
     private RestaurantRepository restaurantRepo;
 
-    @InjectMocks
     private UserController userController;
 
     private ObjectMapper objectMapper;
@@ -50,6 +48,7 @@ class UserControllerTest {
 
     @BeforeEach
     void setUp() {
+        userController = new UserController(service, userRepo, restaurantRepo);
         objectMapper = new ObjectMapper();
 
         mockMvc = MockMvcBuilders.standaloneSetup(userController)
@@ -66,7 +65,7 @@ class UserControllerTest {
         testUser.setKnownRestaurantIds(new ArrayList<>(List.of(10L)));
     }
 
-    // ==================== POST /users/internal ====================
+    //  POST /users/internal 
 
     @Test
     void createUser_success() throws Exception {
@@ -99,7 +98,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.message").value("User already exists with username: prav"));
     }
 
-    // ==================== GET /users/username/{username} ====================
+    //  GET /users/username/{username} 
 
     @Test
     void getByUsername_found() throws Exception {
@@ -118,7 +117,7 @@ class UserControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    // ==================== GET /users/internal/{id} ====================
+    //  GET /users/internal/{id} 
 
     @Test
     void getUserById_found() throws Exception {
@@ -137,7 +136,7 @@ class UserControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    // ==================== POST /users/restaurant ====================
+    //  POST /users/restaurant 
 
     @Test
     void createRestaurant_success() throws Exception {
@@ -190,7 +189,7 @@ class UserControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    // ==================== GET /users/restaurants ====================
+    //  GET /users/restaurants 
 
     @Test
     void getMyRestaurants_found() throws Exception {
@@ -212,7 +211,7 @@ class UserControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    // ==================== GET /users/restaurant/users ====================
+    //  GET /users/restaurant/users 
 
     @Test
     void getRestaurantUsers_success() throws Exception {
@@ -259,7 +258,7 @@ class UserControllerTest {
                 .andExpect(status().isForbidden());
     }
 
-    // ==================== PUT /users/promote/{userId} ====================
+    //  PUT /users/promote/{userId} 
 
     @Test
     void promote_success() throws Exception {
@@ -314,7 +313,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.message").value("Only USER role can be promoted"));
     }
 
-    // ==================== PUT /users/demote/{userId} ====================
+    //  PUT /users/demote/{userId} 
 
     @Test
     void demote_success() throws Exception {

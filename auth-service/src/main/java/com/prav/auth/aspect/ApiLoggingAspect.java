@@ -20,10 +20,14 @@ import java.util.Map;
 
 @Aspect
 @Component
+@SuppressWarnings("java:S2139")
 public class ApiLoggingAspect {
 
     private static final Logger log = LoggerFactory.getLogger(ApiLoggingAspect.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private static final String BORDER = "══════════════════════════════════════════════════════════════";
+    private static final String BORDER_END = "═════════════════════════════════════════════════════════════";
 
     @Pointcut("within(@org.springframework.web.bind.annotation.RestController *)")
     public void controllerMethods() {}
@@ -34,118 +38,103 @@ public class ApiLoggingAspect {
     @Pointcut("within(@org.springframework.stereotype.Repository *)")
     public void repositoryMethods() {}
 
-    // ==================== CONTROLLER — Full HTTP Request/Response Logging ====================
-
     @Around("controllerMethods()")
     public Object logController(ProceedingJoinPoint joinPoint) throws Throwable {
         String className = joinPoint.getTarget().getClass().getSimpleName();
         String methodName = joinPoint.getSignature().getName();
         long startTime = System.currentTimeMillis();
 
-        // Log incoming request
-        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        if (attributes != null) {
-            HttpServletRequest request = attributes.getRequest();
-            String httpMethod = request.getMethod();
-            String uri = request.getRequestURI();
-            String clientIp = request.getRemoteAddr();
+        if (log.isInfoEnabled()) {
+            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attributes != null) {
+                HttpServletRequest request = attributes.getRequest();
+                log.info("\n{}", BORDER);
+                log.info("  >> INCOMING REQUEST");
+                log.info("  >> {} {}", request.getMethod(), request.getRequestURI());
+                log.info("  >> Controller: {}.{}()", className, methodName);
+                log.info("  >> Client IP: {}", request.getRemoteAddr());
+                log.info("  >> Headers: {}", getHeaders(request));
 
-            System.out.println("\n" +
-                "╔══════════════════════════════════════════════════════════════");
-            System.out.println("  >> INCOMING REQUEST");
-            System.out.println("  >> " + httpMethod + " " + uri);
-            System.out.println("  >> Controller: " + className + "." + methodName + "()");
-            System.out.println("  >> Client IP: " + clientIp);
-            System.out.println("  >> Headers: " + getHeaders(request));
-
-            // Log request body (skip file uploads)
-            Object[] args = joinPoint.getArgs();
-            for (Object arg : args) {
-                if (!(arg instanceof HttpServletRequest) && !(arg instanceof HttpServletResponse)
-                        && !(arg instanceof MultipartFile)) {
-                    System.out.println("  >> Request Body: " + toJson(arg));
+                for (Object arg : joinPoint.getArgs()) {
+                    if (!(arg instanceof HttpServletRequest) && !(arg instanceof HttpServletResponse) && !(arg instanceof MultipartFile)) {
+                        log.info("  >> Request Body: {}", toJson(arg));
+                    }
                 }
+                log.info(BORDER_END);
             }
-            System.out.println("╚══════════════════════════════════════════════════════════════");
         }
 
         try {
             Object result = joinPoint.proceed();
             long elapsed = System.currentTimeMillis() - startTime;
 
-            System.out.println(
-                "╔══════════════════════════════════════════════════════════════");
-            System.out.println("  << RESPONSE [" + className + "." + methodName + "()]");
-            System.out.println("  << Status: SUCCESS (" + elapsed + "ms)");
-            System.out.println("  << Response Body: " + toJson(result));
-            System.out.println("╚══════════════════════════════════════════════════════════════");
-
+            if (log.isInfoEnabled()) {
+                log.info(BORDER);
+                log.info("  << RESPONSE [{}.{}()]", className, methodName);
+                log.info("  << Status: SUCCESS ({}ms)", elapsed);
+                log.info("  << Response Body: {}", toJson(result));
+                log.info(BORDER_END);
+            }
             return result;
         } catch (Throwable ex) {
             long elapsed = System.currentTimeMillis() - startTime;
-
-            System.out.println(
-                "╔══════════════════════════════════════════════════════════════");
-            System.out.println("  !! ERROR [" + className + "." + methodName + "()]");
-            System.out.println("  !! Exception: " + ex.getClass().getSimpleName());
-            System.out.println("  !! Message: " + ex.getMessage());
-            System.out.println("  !! Time: " + elapsed + "ms");
-            System.out.println("╚══════════════════════════════════════════════════════════════");
-
+            if (log.isErrorEnabled()) {
+                log.error(BORDER);
+                log.error("  !! ERROR [{}.{}()]", className, methodName);
+                log.error("  !! Exception: {}", ex.getClass().getSimpleName());
+                log.error("  !! Message: {}", ex.getMessage());
+                log.error("  !! Time: {}ms", elapsed);
+                log.error(BORDER_END);
+            }
             throw ex;
         }
     }
-
-    // ==================== SERVICE — Method calls with args ====================
 
     @Around("serviceMethods()")
     public Object logService(ProceedingJoinPoint joinPoint) throws Throwable {
         String className = joinPoint.getTarget().getClass().getSimpleName();
         String methodName = joinPoint.getSignature().getName();
-        String args = Arrays.toString(joinPoint.getArgs());
 
-        System.out.println("  [SERVICE] -> " + className + "." + methodName + "(" + truncate(args, 200) + ")");
+        if (log.isInfoEnabled()) {
+            log.info("  [SERVICE] -> {}.{}({})", className, methodName, truncate(Arrays.toString(joinPoint.getArgs()), 200));
+        }
 
         long startTime = System.currentTimeMillis();
         try {
             Object result = joinPoint.proceed();
             long elapsed = System.currentTimeMillis() - startTime;
-
-            System.out.println("  [SERVICE] <- " + className + "." + methodName + "() returned in " + elapsed + "ms");
+            if (log.isInfoEnabled()) {
+                log.info("  [SERVICE] <- {}.{}() returned in {}ms", className, methodName, elapsed);
+            }
             return result;
         } catch (Throwable ex) {
             long elapsed = System.currentTimeMillis() - startTime;
-            System.out.println("  [SERVICE] !! " + className + "." + methodName + "() FAILED after " + elapsed + "ms: " + ex.getMessage());
+            if (log.isErrorEnabled()) {
+                log.error("  [SERVICE] !! {}.{}() FAILED after {}ms: {}", className, methodName, elapsed, ex.getMessage());
+            }
             throw ex;
         }
     }
 
-    // ==================== REPOSITORY — DB queries ====================
-
     @Around("repositoryMethods()")
     public Object logRepository(ProceedingJoinPoint joinPoint) throws Throwable {
-        String className = joinPoint.getTarget().getClass().getSimpleName();
-        String methodName = joinPoint.getSignature().getName();
-        String args = Arrays.toString(joinPoint.getArgs());
-
         long startTime = System.currentTimeMillis();
         Object result = joinPoint.proceed();
         long elapsed = System.currentTimeMillis() - startTime;
 
-        if (elapsed > 200) {
-            System.out.println("  [DB-SLOW] " + className + "." + methodName + "(" + truncate(args, 100) + ") took " + elapsed + "ms");
+        if (elapsed > 200 && log.isWarnEnabled()) {
+            String className = joinPoint.getTarget().getClass().getSimpleName();
+            String methodName = joinPoint.getSignature().getName();
+            log.warn("  [DB-SLOW] {}.{}({}) took {}ms", className, methodName, truncate(Arrays.toString(joinPoint.getArgs()), 100), elapsed);
         }
 
         return result;
     }
 
-    // ==================== HELPERS ====================
-
     private String toJson(Object obj) {
         try {
             if (obj == null) return "null";
-            String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
-            return truncate(json, 500);
+            return truncate(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj), 500);
         } catch (Exception e) {
             return obj.toString();
         }
@@ -161,9 +150,9 @@ public class ApiLoggingAspect {
         java.util.Enumeration<String> headerNames = request.getHeaderNames();
         while (headerNames.hasMoreElements()) {
             String name = headerNames.nextElement();
-            // Mask Authorization header
             if ("authorization".equalsIgnoreCase(name)) {
-                headers.put(name, request.getHeader(name).substring(0, 15) + "...");
+                String val = request.getHeader(name);
+                headers.put(name, val.length() > 15 ? val.substring(0, 15) + "..." : val);
             } else {
                 headers.put(name, request.getHeader(name));
             }

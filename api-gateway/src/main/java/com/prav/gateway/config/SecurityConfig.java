@@ -25,6 +25,12 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .httpBasic(basic -> basic.disable())
                 .formLogin(form -> form.disable())
+                .exceptionHandling(exceptionHandling -> 
+                    exceptionHandling.authenticationEntryPoint((exchange, e) -> {
+                        exchange.getResponse().setStatusCode(org.springframework.http.HttpStatus.UNAUTHORIZED);
+                        return reactor.core.publisher.Mono.empty();
+                    })
+                )
                 .addFilterBefore(jwtFilter, SecurityWebFiltersOrder.AUTHORIZATION)
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers("/auth/**").permitAll()

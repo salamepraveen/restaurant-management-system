@@ -1,6 +1,8 @@
 com\prav\pizza\dto\DTOValidationTest.class
+com\prav\pizza\model\ModelCoverageTest.class
 com\prav\pizza\ModelCoverageTest.class
 com\prav\pizza\controller\PizzaControllerTest.class
+com\prav\pizza\dto\DTOCoverageTest.class
 com\prav\pizza\DTOCoverageTest.class
 com\prav\pizza\PizzaServiceApplicationTests.class
 com\prav\pizza\service\PizzaServiceTest.class

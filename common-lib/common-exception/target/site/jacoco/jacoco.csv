@@ -1,0 +1,8 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+Common Exception,com.prav.common.exception,BadRequestException,0,4,0,0,0,2,0,1,0,1
+Common Exception,com.prav.common.exception,ServiceException,0,9,0,0,0,4,0,2,0,2
+Common Exception,com.prav.common.exception,ForbiddenException,0,4,0,0,0,2,0,1,0,1
+Common Exception,com.prav.common.exception,UnauthorizedException,0,4,0,0,0,2,0,1,0,1
+Common Exception,com.prav.common.exception,BaseGlobalExceptionHandler,119,0,0,0,40,0,8,0,8,0
+Common Exception,com.prav.common.exception,ConflictException,5,4,0,0,2,2,1,1,1,1
+Common Exception,com.prav.common.exception,ResourceNotFoundException,4,19,0,0,2,2,1,1,1,1

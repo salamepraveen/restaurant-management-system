@@ -13,8 +13,11 @@ import javax.crypto.SecretKey;
 @Component
 public class JwtUtil {
 
-    private final String SECRET = "spidey-secret-key-stacy-gwen-spidey-secret";
-    private final SecretKey key = Keys.hmacShaKeyFor(SECRET.getBytes());
+    private final SecretKey key;
+ 
+    public JwtUtil(@org.springframework.beans.factory.annotation.Value("${jwt.secret}") String secret) {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+    }
 
     public String generateToken(UserDTO user) {
         return Jwts.builder()

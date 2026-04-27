@@ -2,9 +2,9 @@ package com.prav.user.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.prav.user.model.Restaurant;
 import com.prav.user.model.User;
 import com.prav.user.repository.RestaurantRepository;
 import com.prav.user.repository.UserRepository;
@@ -13,11 +13,13 @@ import com.prav.user.repository.UserRepository;
 @Service
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepo;
+    private final UserRepository userRepo;
+    private final RestaurantRepository restaurantRepo;
 
-    @Autowired
-    private RestaurantRepository restaurantRepo;
+    public UserService(UserRepository userRepo, RestaurantRepository restaurantRepo) {
+        this.userRepo = userRepo;
+        this.restaurantRepo = restaurantRepo;
+    }
 
     
     public User createUser(User user) {
@@ -102,6 +104,10 @@ public class UserService {
     }
 
     
+    public List<Restaurant> getAllPublicRestaurants() {
+        return restaurantRepo.findAll();
+    }
+
     private List<Long> getAllRestaurantIds() {
         List<Long> ids = new ArrayList<>();
         restaurantRepo.findAll().forEach(r -> ids.add(r.getId()));

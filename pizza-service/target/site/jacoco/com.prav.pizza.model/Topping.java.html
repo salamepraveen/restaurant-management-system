@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Topping.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Pizza Service</a> &gt; <a href="index.source.html" class="el_package">com.prav.pizza.model</a> &gt; <span class="el_source">Topping.java</span></div><h1>Topping.java</h1><pre class="source lang-java linenums">package com.prav.pizza.model;
+
+import java.util.ArrayList;
+import java.util.List;
+import jakarta.persistence.*;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = &quot;toppings&quot;)
+<span class="fc" id="L10">public class Topping {</span>
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String name;
+    private Double price;
+    private Long restaurantId;
+
+<span class="fc" id="L20">    @Column(nullable = false, columnDefinition = &quot;boolean default true&quot;)</span>
+<span class="fc" id="L21">    private Boolean isAvailable = true;</span>
+
+<span class="fc" id="L23">    @ManyToMany(mappedBy = &quot;toppings&quot;)</span>
+    private List&lt;Pizza&gt; pizzas = new ArrayList&lt;&gt;();
+
+	public Long getId() {
+<span class="fc" id="L27">		return id;</span>
+	}
+
+	public void setId(Long id) {
+<span class="fc" id="L31">		this.id = id;</span>
+<span class="fc" id="L32">	}</span>
+
+	public String getName() {
+<span class="fc" id="L35">		return name;</span>
+	}
+
+	public void setName(String name) {
+<span class="fc" id="L39">		this.name = name;</span>
+<span class="fc" id="L40">	}</span>
+
+	public Double getPrice() {
+<span class="fc" id="L43">		return price;</span>
+	}
+
+	public void setPrice(Double price) {
+<span class="fc" id="L47">		this.price = price;</span>
+<span class="fc" id="L48">	}</span>
+
+	public Long getRestaurantId() {
+<span class="fc" id="L51">		return restaurantId;</span>
+	}
+
+	public void setRestaurantId(Long restaurantId) {
+<span class="fc" id="L55">		this.restaurantId = restaurantId;</span>
+<span class="fc" id="L56">	}</span>
+
+	public List&lt;Pizza&gt; getPizzas() {
+<span class="fc" id="L59">		return pizzas;</span>
+	}
+
+	public void setPizzas(List&lt;Pizza&gt; pizzas) {
+<span class="fc" id="L63">		this.pizzas = pizzas;</span>
+<span class="fc" id="L64">	}</span>
+
+    public Boolean getIsAvailable() {
+<span class="fc" id="L67">        return isAvailable;</span>
+    }
+
+    public void setIsAvailable(Boolean isAvailable) {
+<span class="fc" id="L71">        this.isAvailable = isAvailable;</span>
+<span class="fc" id="L72">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

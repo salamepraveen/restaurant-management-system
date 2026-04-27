@@ -18,11 +18,13 @@ import com.prav.order.repository.OrderRepository;
 @Service
 public class ReportService {
 
-    @Autowired
-    private OrderRepository repo;
+    private final OrderRepository repo;
+    private final OrderItemRepository itemRepo;
 
-    @Autowired
-    private OrderItemRepository itemRepo;
+    public ReportService(OrderRepository repo, OrderItemRepository itemRepo) {
+        this.repo = repo;
+        this.itemRepo = itemRepo;
+    }
 
     // ==================== Revenue by Restaurant ====================
 

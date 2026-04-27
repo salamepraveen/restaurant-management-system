@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Order.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Order Service</a> &gt; <a href="index.source.html" class="el_package">com.prav.order.model</a> &gt; <span class="el_source">Order.java</span></div><h1>Order.java</h1><pre class="source lang-java linenums">package com.prav.order.model;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import lombok.ToString;
+import lombok.EqualsAndHashCode;
+@Entity
+@Table(name = &quot;orders&quot;)
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Order {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = &quot;user_id&quot;, nullable = false)
+    private Long userId;
+
+    @Column(name = &quot;restaurant_id&quot;)
+    private Long restaurantId;
+
+    @Column(name = &quot;delivery_address&quot;)
+    private String deliveryAddress;
+
+    @Column(name = &quot;payment_method&quot;)
+    private String paymentMethod;
+
+    @Column(nullable = false)
+    private BigDecimal totalAmount;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
+
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatus;
+
+    @Column(name = &quot;razorpay_order_id&quot;)
+    private String razorpayOrderId;
+
+    @Column(name = &quot;razorpay_payment_id&quot;)
+    private String razorpayPaymentId;
+
+    @Column(name = &quot;razorpay_signature&quot;)
+    private String razorpaySignature;
+
+    @Column(name = &quot;refund_amount&quot;)
+    private BigDecimal refundAmount;
+
+    @Column(name = &quot;refund_id&quot;)
+    private String refundId;
+
+    @Column(name = &quot;cancellation_reason&quot;)
+    private String cancellationReason;
+
+    @Column(name = &quot;created_at&quot;)
+    private LocalDateTime createdAt;
+
+    @Column(name = &quot;updated_at&quot;)
+    private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = &quot;order&quot;, cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private List&lt;OrderItem&gt; orderItems;
+
+    @PrePersist
+    protected void onCreate() {
+<span class="nc" id="L77">        createdAt = LocalDateTime.now();</span>
+<span class="nc" id="L78">        updatedAt = LocalDateTime.now();</span>
+<span class="nc" id="L79">        status = OrderStatus.PLACED;</span>
+<span class="nc" id="L80">        paymentStatus = PaymentStatus.PENDING;</span>
+<span class="nc" id="L81">    }</span>
+
+    @PreUpdate
+    protected void onUpdate() {
+<span class="nc" id="L85">        updatedAt = LocalDateTime.now();</span>
+<span class="nc" id="L86">    }</span>
+
+    // ==================== Enums ====================
+
+<span class="fc" id="L90">    public enum OrderStatus {</span>
+<span class="fc" id="L91">        PLACED, CONFIRMED, PREPARING, OUT_FOR_DELIVERY, DELIVERED, CANCELLED</span>
+    }
+
+<span class="fc" id="L94">    public enum PaymentStatus {</span>
+<span class="fc" id="L95">        PENDING, COMPLETED, FAILED, REFUNDED, PARTIALLY_REFUNDED</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

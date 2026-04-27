@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.prav.pizza.dto.PizzaDTO;
@@ -20,14 +19,15 @@ import com.prav.pizza.repository.ToppingRepository;
 @Service
 public class PizzaService {
 
-    @Autowired
-    private PizzaRepository pizzaRepo;
+    private final PizzaRepository pizzaRepo;
+    private final PizzaSizeRepository sizeRepo;
+    private final ToppingRepository toppingRepo;
 
-    @Autowired
-    private PizzaSizeRepository sizeRepo;
-
-    @Autowired
-    private ToppingRepository toppingRepo;
+    public PizzaService(PizzaRepository pizzaRepo, PizzaSizeRepository sizeRepo, ToppingRepository toppingRepo) {
+        this.pizzaRepo = pizzaRepo;
+        this.sizeRepo = sizeRepo;
+        this.toppingRepo = toppingRepo;
+    }
 
    
     

@@ -4,7 +4,6 @@ import com.prav.auth.client.UserClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.SimpleMailMessage;
@@ -24,14 +23,11 @@ class OtpServiceTest {
     @Mock
     private UserClient userClient;
 
-    @InjectMocks
     private OtpService otpService;
-
+ 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(otpService, "fromEmail", "test@pizza.com");
-        ReflectionTestUtils.setField(otpService, "expiryMinutes", 5);
-        ReflectionTestUtils.setField(otpService, "otpLength", 6);
+        otpService = new OtpService(mailSender, userClient, "test@pizza.com", 5, 6);
     }
 
     @Test
@@ -103,13 +99,32 @@ class OtpServiceTest {
     @Test
     void verifyLoginOtp_success() {
         otpService.generateLoginOtp("login@test.com");
-        // We can't easily get the OTP because it's random, but we can mock generateOtp or just check store
-        // Actually, let's use reflection to get it from the map for testing
         java.util.Map<String, Object> store = (java.util.Map<String, Object>) ReflectionTestUtils.getField(otpService, "otpStore");
         Object entry = store.get("login@test.com");
         String otp = (String) ReflectionTestUtils.getField(entry, "otp");
         
         otpService.verifyLoginOtp("login@test.com", otp);
         assertNull(store.get("login@test.com"));
+    }
+ 
+    @Test
+    void generateSignupOtp_genericError_proceeds() {
+        when(userClient.getUserByEmail(anyString())).thenThrow(new RuntimeException("500 Internal Error"));
+        String otp = otpService.generateSignupOtp("test@test.com", "user", "pass");
+        assertNotNull(otp);
+        verify(mailSender).send(any(SimpleMailMessage.class));
+    }
+ 
+    @Test
+    void verifySignupOtp_noRequest_throwsException() {
+        assertThrows(RuntimeException.class, () -> otpService.verifySignupOtp("none@test.com", "123456"));
+    }
+ 
+    @Test
+    void sendOtpEmail_failure_logged() {
+        doThrow(new RuntimeException("Mail server down")).when(mailSender).send(any(SimpleMailMessage.class));
+        when(userClient.getUserByEmail(anyString())).thenThrow(new RuntimeException("404"));
+        
+        assertDoesNotThrow(() -> otpService.generateSignupOtp("test@test.com", "user", "pass"));
     }
 }

@@ -16,7 +16,6 @@ import com.prav.order.service.ReportService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -29,7 +28,6 @@ public class ReportServiceTest {
     @Mock
     private OrderItemRepository itemRepo;
 
-    @InjectMocks
     private ReportService reportService;
 
     private List<Order> sampleOrders;
@@ -37,6 +35,8 @@ public class ReportServiceTest {
 
     @BeforeEach
     void setUp() {
+        reportService = new ReportService(repo, itemRepo);
+        
         sampleOrders = new ArrayList<>();
 
         Order order1 = new Order();

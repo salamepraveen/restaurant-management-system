@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RazorpayPaymentService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Order Service</a> &gt; <a href="index.source.html" class="el_package">com.prav.order.service</a> &gt; <span class="el_source">RazorpayPaymentService.java</span></div><h1>RazorpayPaymentService.java</h1><pre class="source lang-java linenums">package com.prav.order.service;
+
+import com.razorpay.Order;
+import com.razorpay.RazorpayClient;
+import com.razorpay.RazorpayException;
+import com.razorpay.Refund;
+import com.prav.order.dto.RefundResponseDTO;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import com.razorpay.Utils;
+import java.math.BigDecimal;
+
+@Service
+public class RazorpayPaymentService {
+
+<span class="fc" id="L19">    private static final Logger log = LoggerFactory.getLogger(RazorpayPaymentService.class);</span>
+    private static final String BORDER = &quot;========================================&quot;;
+
+    private final String keyId;
+    private final String keySecret;
+    private final String currency;
+    private final int refundPercentage;
+
+    public RazorpayPaymentService(
+            @Value(&quot;${razorpay.key-id}&quot;) String keyId,
+            @Value(&quot;${razorpay.key-secret}&quot;) String keySecret,
+            @Value(&quot;${razorpay.currency}&quot;) String currency,
+<span class="fc" id="L31">            @Value(&quot;${razorpay.refund-percentage}&quot;) int refundPercentage) {</span>
+<span class="fc" id="L32">        this.keyId = keyId;</span>
+<span class="fc" id="L33">        this.keySecret = keySecret;</span>
+<span class="fc" id="L34">        this.currency = currency;</span>
+<span class="fc" id="L35">        this.refundPercentage = refundPercentage;</span>
+<span class="fc" id="L36">    }</span>
+
+    private RazorpayClient getClient() throws RazorpayException {
+<span class="fc" id="L39">        return new RazorpayClient(keyId, keySecret);</span>
+    }
+
+    public Order createRazorpayOrder(Long orderId, BigDecimal amount) {
+        try {
+<span class="fc" id="L44">            RazorpayClient client = getClient();</span>
+<span class="fc" id="L45">            JSONObject orderRequest = new JSONObject();</span>
+<span class="fc" id="L46">            long amountInPaise = amount.multiply(BigDecimal.valueOf(100)).longValue();</span>
+<span class="fc" id="L47">            orderRequest.put(&quot;amount&quot;, amountInPaise);</span>
+<span class="fc" id="L48">            orderRequest.put(&quot;currency&quot;, currency);</span>
+<span class="fc" id="L49">            orderRequest.put(&quot;receipt&quot;, &quot;order_rcpt_&quot; + orderId);</span>
+
+<span class="fc" id="L51">            Order razorpayOrder = client.Orders.create(orderRequest);</span>
+
+<span class="fc" id="L53">            Object rzpId = razorpayOrder.get(&quot;id&quot;);</span>
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">            if (log.isInfoEnabled()) {</span>
+<span class="fc" id="L55">                log.info(BORDER);</span>
+<span class="fc" id="L56">                log.info(&quot;  RAZORPAY ORDER CREATED&quot;);</span>
+<span class="fc" id="L57">                log.info(&quot;  Order ID: {}&quot;, orderId);</span>
+<span class="fc" id="L58">                log.info(&quot;  Razorpay Order ID: {}&quot;, rzpId);</span>
+<span class="fc" id="L59">                log.info(&quot;  Amount: {} {}&quot;, currency, amount);</span>
+<span class="fc" id="L60">                log.info(BORDER);</span>
+            }
+
+<span class="fc" id="L63">            return razorpayOrder;</span>
+<span class="fc" id="L64">        } catch (RazorpayException e) {</span>
+<span class="fc" id="L65">            throw new RuntimeException(&quot;Failed to create payment order: &quot; + e.getMessage(), e);</span>
+        }
+    }
+
+    public boolean verifyPayment(String orderId, String paymentId, String signature) {
+        try {
+<span class="fc" id="L71">            log.info(&quot;  [PAYMENT] Verifying...&quot;);</span>
+<span class="fc" id="L72">            log.info(&quot;  [PAYMENT] Order: {} | Payment: {}&quot;, orderId, paymentId);</span>
+
+<span class="fc" id="L74">            JSONObject attributes = new JSONObject();</span>
+<span class="fc" id="L75">            attributes.put(&quot;razorpay_order_id&quot;, orderId);</span>
+<span class="fc" id="L76">            attributes.put(&quot;razorpay_payment_id&quot;, paymentId);</span>
+<span class="fc" id="L77">            attributes.put(&quot;razorpay_signature&quot;, signature);</span>
+
+<span class="fc" id="L79">            return Utils.verifyPaymentSignature(attributes, keySecret);</span>
+<span class="fc" id="L80">        } catch (Exception e) {</span>
+<span class="fc" id="L81">            log.error(&quot;  [PAYMENT] !! Verification failed&quot;, e);</span>
+<span class="fc" id="L82">            return false;</span>
+        }
+    }
+
+    public RefundResponseDTO processRefund(Long orderId, BigDecimal originalAmount, String razorpayPaymentId) {
+        try {
+<span class="fc" id="L88">            RazorpayClient client = getClient();</span>
+
+<span class="fc" id="L90">            BigDecimal refundFactor = BigDecimal.valueOf(refundPercentage).divide(BigDecimal.valueOf(100));</span>
+<span class="fc" id="L91">            BigDecimal refundAmount = originalAmount.multiply(refundFactor);</span>
+<span class="fc" id="L92">            BigDecimal deduction = originalAmount.subtract(refundAmount);</span>
+<span class="fc" id="L93">            long refundInPaise = refundAmount.multiply(BigDecimal.valueOf(100)).longValue();</span>
+
+<span class="fc" id="L95">            JSONObject refundRequest = new JSONObject();</span>
+<span class="fc" id="L96">            refundRequest.put(&quot;amount&quot;, refundInPaise);</span>
+<span class="fc" id="L97">            refundRequest.put(&quot;speed&quot;, &quot;normal&quot;);</span>
+
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">            if (log.isInfoEnabled()) {</span>
+<span class="fc" id="L100">                log.info(BORDER);</span>
+<span class="fc" id="L101">                log.info(&quot;  PROCESSING REFUND&quot;);</span>
+<span class="fc" id="L102">                log.info(&quot;  Order ID: {}&quot;, orderId);</span>
+<span class="fc" id="L103">                log.info(&quot;  Original: {} {}&quot;, currency, originalAmount);</span>
+<span class="fc" id="L104">                log.info(&quot;  Refund ({}%): {} {}&quot;, refundPercentage, currency, refundAmount);</span>
+<span class="fc" id="L105">                log.info(&quot;  Deduction: {} {}&quot;, currency, deduction);</span>
+<span class="fc" id="L106">                log.info(BORDER);</span>
+            }
+
+<span class="fc" id="L109">            Refund refund = client.Payments.refund(razorpayPaymentId, refundRequest);</span>
+
+<span class="fc" id="L111">            Object refId = refund.get(&quot;id&quot;);</span>
+<span class="fc" id="L112">            Object refStatus = refund.get(&quot;status&quot;);</span>
+
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">            if (log.isInfoEnabled()) {</span>
+<span class="fc" id="L115">                log.info(&quot;  [REFUND] ID: {} | Status: {}&quot;, refId, refStatus);</span>
+            }
+
+<span class="fc" id="L118">            return RefundResponseDTO.builder()</span>
+<span class="fc" id="L119">                    .orderId(orderId)</span>
+<span class="fc" id="L120">                    .originalAmount(originalAmount)</span>
+<span class="fc" id="L121">                    .refundAmount(refundAmount)</span>
+<span class="fc" id="L122">                    .deductionAmount(deduction)</span>
+<span class="fc" id="L123">                    .refundPercentage(refundPercentage)</span>
+<span class="fc" id="L124">                    .refundId(String.valueOf((Object) refund.get(&quot;id&quot;)))</span>
+<span class="fc" id="L125">                    .status(String.valueOf((Object) refund.get(&quot;status&quot;)))</span>
+<span class="fc" id="L126">                    .message(refundPercentage + &quot;% refund processed. &quot; + currency + &quot; &quot; + deduction + &quot; deducted as cancellation fee.&quot;)</span>
+<span class="fc" id="L127">                    .build();</span>
+<span class="fc" id="L128">        } catch (RazorpayException e) {</span>
+<span class="fc" id="L129">            throw new RuntimeException(&quot;Failed to process refund: &quot; + e.getMessage(), e);</span>
+        }
+    }
+
+    public String getKeyId() {
+<span class="fc" id="L134">        return keyId;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

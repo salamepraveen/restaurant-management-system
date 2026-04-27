@@ -5,15 +5,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.prav.common.dto.ErrorResponse;
 import com.prav.common.exception.BaseGlobalExceptionHandler;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler extends BaseGlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
-        ErrorResponse error = ErrorResponse.builder()
+    public ResponseEntity<com.prav.common.dto.ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
+        com.prav.common.dto.ErrorResponse error = com.prav.common.dto.ErrorResponse.builder()
                 .status(HttpStatus.FORBIDDEN.value())
                 .error(HttpStatus.FORBIDDEN.getReasonPhrase())
                 .message(ex.getMessage())
@@ -23,8 +22,8 @@ public class GlobalExceptionHandler extends BaseGlobalExceptionHandler {
     }
 
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException ex) {
-        ErrorResponse error = ErrorResponse.builder()
+    public ResponseEntity<com.prav.common.dto.ErrorResponse> handleUserNotFound(UserNotFoundException ex) {
+        com.prav.common.dto.ErrorResponse error = com.prav.common.dto.ErrorResponse.builder()
                 .status(HttpStatus.NOT_FOUND.value())
                 .error(HttpStatus.NOT_FOUND.getReasonPhrase())
                 .message(ex.getMessage())
@@ -34,8 +33,8 @@ public class GlobalExceptionHandler extends BaseGlobalExceptionHandler {
     }
 
     @ExceptionHandler(UserOperationException.class)
-    public ResponseEntity<ErrorResponse> handleUserOperation(UserOperationException ex) {
-        ErrorResponse error = ErrorResponse.builder()
+    public ResponseEntity<com.prav.common.dto.ErrorResponse> handleUserOperation(UserOperationException ex) {
+        com.prav.common.dto.ErrorResponse error = com.prav.common.dto.ErrorResponse.builder()
                 .status(HttpStatus.BAD_REQUEST.value())
                 .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
                 .message(ex.getMessage())

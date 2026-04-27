@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GlobalExceptionHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">User Service</a> &gt; <a href="index.source.html" class="el_package">com.prav.user.exception</a> &gt; <span class="el_source">GlobalExceptionHandler.java</span></div><h1>GlobalExceptionHandler.java</h1><pre class="source lang-java linenums">package com.prav.user.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import com.prav.common.exception.BaseGlobalExceptionHandler;
+
+@RestControllerAdvice
+<span class="fc" id="L11">public class GlobalExceptionHandler extends BaseGlobalExceptionHandler {</span>
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity&lt;com.prav.common.dto.ErrorResponse&gt; handleAccessDenied(AccessDeniedException ex) {
+<span class="fc" id="L15">        com.prav.common.dto.ErrorResponse error = com.prav.common.dto.ErrorResponse.builder()</span>
+<span class="fc" id="L16">                .status(HttpStatus.FORBIDDEN.value())</span>
+<span class="fc" id="L17">                .error(HttpStatus.FORBIDDEN.getReasonPhrase())</span>
+<span class="fc" id="L18">                .message(ex.getMessage())</span>
+<span class="fc" id="L19">                .timestamp(java.time.LocalDateTime.now())</span>
+<span class="fc" id="L20">                .build();</span>
+<span class="fc" id="L21">        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);</span>
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity&lt;com.prav.common.dto.ErrorResponse&gt; handleUserNotFound(UserNotFoundException ex) {
+<span class="fc" id="L26">        com.prav.common.dto.ErrorResponse error = com.prav.common.dto.ErrorResponse.builder()</span>
+<span class="fc" id="L27">                .status(HttpStatus.NOT_FOUND.value())</span>
+<span class="fc" id="L28">                .error(HttpStatus.NOT_FOUND.getReasonPhrase())</span>
+<span class="fc" id="L29">                .message(ex.getMessage())</span>
+<span class="fc" id="L30">                .timestamp(java.time.LocalDateTime.now())</span>
+<span class="fc" id="L31">                .build();</span>
+<span class="fc" id="L32">        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);</span>
+    }
+
+    @ExceptionHandler(UserOperationException.class)
+    public ResponseEntity&lt;com.prav.common.dto.ErrorResponse&gt; handleUserOperation(UserOperationException ex) {
+<span class="nc" id="L37">        com.prav.common.dto.ErrorResponse error = com.prav.common.dto.ErrorResponse.builder()</span>
+<span class="nc" id="L38">                .status(HttpStatus.BAD_REQUEST.value())</span>
+<span class="nc" id="L39">                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())</span>
+<span class="nc" id="L40">                .message(ex.getMessage())</span>
+<span class="nc" id="L41">                .timestamp(java.time.LocalDateTime.now())</span>
+<span class="nc" id="L42">                .build();</span>
+<span class="nc" id="L43">        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,22 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+Order Service,com.prav.order.dto,OrderRequestDTO.OrderItemDTO,0,31,0,0,0,13,0,9,0,9
+Order Service,com.prav.order.dto,OrderStatusDTO,0,10,0,0,0,4,0,3,0,3
+Order Service,com.prav.order.dto,UserDTO,0,31,0,0,0,13,0,9,0,9
+Order Service,com.prav.order.dto,OrderRequestDTO,0,31,0,0,0,13,0,9,0,9
+Order Service,com.prav.order.dto,PizzaDTO,0,31,0,0,0,13,0,9,0,9
+Order Service,com.prav.order,OrderServiceApplication,8,0,0,0,3,0,2,0,2,0
+Order Service,com.prav.order.aspect,ApiLoggingAspect,46,361,19,19,8,74,19,11,3,8
+Order Service,com.prav.order.aspect,PerformanceAspect,0,45,0,2,0,11,0,4,0,3
+Order Service,com.prav.order.aspect,AuditAspect,0,44,0,0,0,9,0,3,0,3
+Order Service,com.prav.order.controller,OrderController,28,329,4,20,6,100,5,24,1,16
+Order Service,com.prav.order.service,ReportService,18,712,10,45,3,135,11,31,1,10
+Order Service,com.prav.order.service,RazorpayPaymentService,0,296,3,3,0,70,3,7,0,7
+Order Service,com.prav.order.service,OrderServiceImpl,77,966,29,67,12,236,30,39,3,16
+Order Service,com.prav.order.exception,GlobalExceptionHandler,60,0,0,0,22,0,4,0,4,0
+Order Service,com.prav.order.exception,OrderNotFoundException,9,0,0,0,4,0,2,0,2,0
+Order Service,com.prav.order.exception,AccessDeniedException,0,4,0,0,0,2,0,1,0,1
+Order Service,com.prav.order.exception,InvalidOrderException,9,0,0,0,4,0,2,0,2,0
+Order Service,com.prav.order.model,Order,17,0,0,0,7,0,2,0,2,0
+Order Service,com.prav.order.model,Order.PaymentStatus,0,33,0,0,0,2,0,1,0,1
+Order Service,com.prav.order.model,Order.OrderStatus,0,39,0,0,0,2,0,1,0,1
+Order Service,com.prav.order.config,PaymentConfig,10,0,0,0,2,0,2,0,2,0

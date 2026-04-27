@@ -1,5 +1,5 @@
 D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\main\java\com\prav\auth\aspect\ApiLoggingAspect.java
-D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\main\java\com\prav\auth\authservice.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\main\java\com\prav\auth\AuthServiceApplication.java
 D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\main\java\com\prav\auth\client\UserClient.java
 D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\main\java\com\prav\auth\client\UserClientFallback.java
 D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\main\java\com\prav\auth\client\UserClientFallbackFactory.java

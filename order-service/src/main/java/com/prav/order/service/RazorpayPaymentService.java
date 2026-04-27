@@ -6,6 +6,8 @@ import com.razorpay.RazorpayException;
 import com.razorpay.Refund;
 import com.prav.order.dto.RefundResponseDTO;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.razorpay.Utils;
@@ -13,18 +15,25 @@ import java.math.BigDecimal;
 
 @Service
 public class RazorpayPaymentService {
+ 
+    private static final Logger log = LoggerFactory.getLogger(RazorpayPaymentService.class);
+//    private static final String BORDER = "========================================";
 
-    @Value("${razorpay.key-id}")
-    private String keyId;
+    private final String keyId;
+    private final String keySecret;
+    private final String currency;
+    private final int refundPercentage;
 
-    @Value("${razorpay.key-secret}")
-    private String keySecret;
-
-    @Value("${razorpay.currency}")
-    private String currency;
-
-    @Value("${razorpay.refund-percentage}")
-    private int refundPercentage;
+    public RazorpayPaymentService(
+            @Value("${razorpay.key-id}") String keyId,
+            @Value("${razorpay.key-secret}") String keySecret,
+            @Value("${razorpay.currency}") String currency,
+            @Value("${razorpay.refund-percentage}") int refundPercentage) {
+        this.keyId = keyId;
+        this.keySecret = keySecret;
+        this.currency = currency;
+        this.refundPercentage = refundPercentage;
+    }
 
     private RazorpayClient getClient() throws RazorpayException {
         return new RazorpayClient(keyId, keySecret);
@@ -41,24 +50,23 @@ public class RazorpayPaymentService {
 
             Order razorpayOrder = client.Orders.create(orderRequest);
 
-            System.out.println("========================================");
-            System.out.println("  RAZORPAY ORDER CREATED");
-            System.out.println("  Order ID: " + orderId);
-            System.out.println("  Razorpay Order ID: " + razorpayOrder.get("id"));
-            System.out.println("  Amount: " + currency + " " + amount);
-            System.out.println("========================================");
+//            log.info("========================================");
+            log.info("  RAZORPAY ORDER CREATED");
+            log.info("  Order ID: {}", orderId);
+            log.info("  Razorpay Order ID: {}", razorpayOrder.get("id").toString());
+            log.info("  Amount: {} {}", currency, amount);
+//            log.info("========================================");
 
             return razorpayOrder;
         } catch (RazorpayException e) {
-            System.out.println("  [RAZORPAY] !! Order creation failed: " + e.getMessage());
-            throw new RuntimeException("Failed to create payment order: " + e.getMessage());
+            throw new RuntimeException("Failed to create payment order: " + e.getMessage(), e);
         }
     }
 
     public boolean verifyPayment(String orderId, String paymentId, String signature) {
         try {
-            System.out.println("  [PAYMENT] Verifying...");
-            System.out.println("  [PAYMENT] Order: " + orderId + " | Payment: " + paymentId);
+            log.info("  [PAYMENT] Verifying...");
+            log.info("  [PAYMENT] Order: {} | Payment: {}", orderId, paymentId);
 
             JSONObject attributes = new JSONObject();
             attributes.put("razorpay_order_id", orderId);
@@ -67,7 +75,7 @@ public class RazorpayPaymentService {
 
             return Utils.verifyPaymentSignature(attributes, keySecret);
         } catch (Exception e) {
-            System.out.println("  [PAYMENT] !! Verification failed: " + e.getMessage());
+            log.error("  [PAYMENT] !! Verification failed", e);
             return false;
         }
     }
@@ -85,17 +93,17 @@ public class RazorpayPaymentService {
             refundRequest.put("amount", refundInPaise);
             refundRequest.put("speed", "normal");
 
-            System.out.println("========================================");
-            System.out.println("  PROCESSING REFUND");
-            System.out.println("  Order ID: " + orderId);
-            System.out.println("  Original: " + currency + " " + originalAmount);
-            System.out.println("  Refund (" + refundPercentage + "%): " + currency + " " + refundAmount);
-            System.out.println("  Deduction: " + currency + " " + deduction);
-            System.out.println("========================================");
+//            log.info("========================================");
+            log.info("  PROCESSING REFUND");
+            log.info("  Order ID: {}", orderId);
+            log.info("  Original: {} {}", currency, originalAmount);
+            log.info("  Refund ({}%): {} {}", refundPercentage, currency, refundAmount);
+            log.info("  Deduction: {} {}", currency, deduction);
+//            log.info("========================================");
 
             Refund refund = client.Payments.refund(razorpayPaymentId, refundRequest);
 
-            System.out.println("  [REFUND] ID: " + refund.get("id") + " | Status: " + refund.get("status"));
+            log.info("  [REFUND] ID: {} | Status: {}", refund.get("id"), refund.get("status"));
 
             return RefundResponseDTO.builder()
                     .orderId(orderId)
@@ -108,8 +116,7 @@ public class RazorpayPaymentService {
                     .message(refundPercentage + "% refund processed. " + currency + " " + deduction + " deducted as cancellation fee.")
                     .build();
         } catch (RazorpayException e) {
-            System.out.println("  [REFUND] !! Failed: " + e.getMessage());
-            throw new RuntimeException("Failed to process refund: " + e.getMessage());
+            throw new RuntimeException("Failed to process refund: " + e.getMessage(), e);
         }
     }
 

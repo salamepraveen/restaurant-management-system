@@ -11,11 +11,11 @@ com\prav\auth\util\JwtUtil.class
 com\prav\auth\aspect\ApiLoggingAspect.class
 com\prav\auth\service\OtpService$SignupData.class
 com\prav\auth\service\OtpService.class
+com\prav\auth\AuthServiceApplication.class
 com\prav\auth\dto\LoginRequest.class
 com\prav\auth\dto\SignupRequest.class
 com\prav\auth\dto\AuthRequest.class
 com\prav\auth\config\SecurityConfig.class
-com\prav\auth\authservice.class
 com\prav\auth\client\UserClientFallbackFactory$1.class
 com\prav\auth\client\UserClientFallbackFactory.class
 com\prav\auth\dto\OtpLoginRequestDTO.class

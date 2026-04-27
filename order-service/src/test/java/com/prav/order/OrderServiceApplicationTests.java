@@ -15,7 +15,6 @@ import com.prav.order.service.RazorpayPaymentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -40,18 +39,18 @@ public class OrderServiceApplicationTests {
     @Mock
     private RazorpayPaymentService paymentService;
 
-    @InjectMocks
     private OrderServiceImpl orderService;
 
     private Order order;
 
     @BeforeEach
     void setUp() {
+        orderService = new OrderServiceImpl(orderRepo, orderItemRepo, pizzaClient, paymentService, "dummy");
         order = new Order();
         order.setId(1L);
         order.setUserId(1L);
         order.setRestaurantId(2L);
-        order.setTotalAmount(BigDecimal.valueOf(29.99));
+        order.setTotalAmount(BigDecimal.valueOf(30.00));
         order.setStatus(Order.OrderStatus.PLACED);
         order.setPaymentStatus(Order.PaymentStatus.PENDING);
         order.setCreatedAt(LocalDateTime.now());
@@ -342,11 +341,12 @@ public class OrderServiceApplicationTests {
     void testCancelOrder_WithPayment() {
         order.setPaymentStatus(Order.PaymentStatus.COMPLETED);
         order.setRazorpayPaymentId("pay_123");
+        ReflectionTestUtils.setField(orderService, "paymentMode", "real");
         when(orderRepo.findById(1L)).thenReturn(Optional.of(order));
         when(orderRepo.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
 
         RefundResponseDTO refund = RefundResponseDTO.builder()
-                .refundAmount(BigDecimal.valueOf(20.99))
+                .refundAmount(BigDecimal.valueOf(21.0))
                 .refundId("refund_123")
                 .status("processed")
                 .build();
@@ -356,7 +356,7 @@ public class OrderServiceApplicationTests {
 
         assertEquals(Order.OrderStatus.CANCELLED, result.getStatus());
         assertEquals(Order.PaymentStatus.PARTIALLY_REFUNDED, result.getPaymentStatus());
-        assertEquals(BigDecimal.valueOf(20.99), result.getRefundAmount());
+        assertEquals(BigDecimal.valueOf(21.0), result.getRefundAmount());
         assertEquals("refund_123", result.getRefundId());
         verify(paymentService).processRefund(eq(1L), any(), eq("pay_123"));
     }

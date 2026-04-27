@@ -22,7 +22,7 @@ public class ApiResponse<T> {
         return ApiResponse.<T>builder()
                 .success(true)
                 .message("Success")
-                .data(data)
+                .data(data) 
                 .build();
     }
 

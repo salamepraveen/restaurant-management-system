@@ -6,7 +6,6 @@ import com.prav.pizza.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -22,7 +21,7 @@ class PizzaServiceTest {
     @Mock private PizzaRepository pizzaRepo;
     @Mock private PizzaSizeRepository sizeRepo;
     @Mock private ToppingRepository toppingRepo;
-    @InjectMocks private PizzaService service;
+    private PizzaService service;
 
     private Pizza pizza;
     private Topping topping;
@@ -30,6 +29,7 @@ class PizzaServiceTest {
 
     @BeforeEach
     void setUp() {
+        service = new PizzaService(pizzaRepo, sizeRepo, toppingRepo);
         pizza = new Pizza();
         pizza.setId(1L);
         pizza.setName("Margherita");

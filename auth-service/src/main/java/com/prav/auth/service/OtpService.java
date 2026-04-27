@@ -4,10 +4,10 @@ import com.prav.common.exception.ConflictException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -16,20 +16,28 @@ import com.prav.auth.client.UserClient;
 
 @Service
 public class OtpService {
+ 
+    private static final Logger log = LoggerFactory.getLogger(OtpService.class);
+    private static final java.security.SecureRandom secureRandom = new java.security.SecureRandom();
 
-    @Autowired
-    private JavaMailSender mailSender;
+    private final JavaMailSender mailSender;
+    private final UserClient userClient;
+    private final String fromEmail;
+    private final int expiryMinutes;
+    private final int otpLength;
 
-    @Autowired
-    private UserClient userClient;  
-    @Value("${spring.mail.username}")
-    private String fromEmail;
-
-    @Value("${otp.expiry.minutes:5}")
-    private int expiryMinutes;
-
-    @Value("${otp.length:6}")
-    private int otpLength;
+    public OtpService(
+            JavaMailSender mailSender,
+            UserClient userClient,
+            @Value("${spring.mail.username}") String fromEmail,
+            @Value("${otp.expiry.minutes:5}") int expiryMinutes,
+            @Value("${otp.length:6}") int otpLength) {
+        this.mailSender = mailSender;
+        this.userClient = userClient;
+        this.fromEmail = fromEmail;
+        this.expiryMinutes = expiryMinutes;
+        this.otpLength = otpLength;
+    }
 
     // In-memory OTP store — key: email, value: OtpEntry
     private final Map<String, OtpEntry> otpStore = new HashMap<>();
@@ -49,7 +57,7 @@ public class OtpService {
             // 404 means email not found — that's good, proceed
             if (e.getMessage() != null && !e.getMessage().contains("404") && !e.getMessage().contains("Not Found")) {
                 // user-service might be down, log warning but allow signup
-                System.out.println("  [WARN] Could not check duplicate email (user-service may be down): " + e.getMessage());
+                log.info("  [WARN] Could not check duplicate email (user-service may be down): {}", e.getMessage());
             }
         }
 
@@ -57,9 +65,9 @@ public class OtpService {
         String otp = generateOtp();
 
         // ✅ Print OTP to console
-        System.out.println("\n╔════════════════════════════════════════════╗");
-        System.out.println("  📧 OTP for " + email + " : " + otp);
-        System.out.println("╚════════════════════════════════════════════╝\n");
+        log.info("\n╔════════════════════════════════════════════╗");
+        log.info("  📧 OTP for {} : {}", email, otp);
+        log.info("╚════════════════════════════════════════════╝\n");
 
         // ✅ Store OTP — using otpStore, not otpCache
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(expiryMinutes);
@@ -69,7 +77,7 @@ public class OtpService {
         try {
             sendOtpEmail(email, otp, "Your Pizza App Signup OTP");
         } catch (Exception e) {
-            System.out.println("  [WARN] Email send failed (OTP still valid in console): " + e.getMessage());
+            log.info("  [WARN] Email send failed (OTP still valid in console): {}", e.getMessage());
         }
 
         return otp;
@@ -106,9 +114,9 @@ public class OtpService {
         otpStore.put(email, new OtpEntry(otp, expiresAt, null, null, "LOGIN"));
 
         // ✅ Print login OTP to console too
-        System.out.println("\n╔════════════════════════════════════════════╗");
-        System.out.println("  📧 LOGIN OTP for " + email + " : " + otp);
-        System.out.println("╚════════════════════════════════════════════╝\n");
+        log.info("\n╔════════════════════════════════════════════╗");
+        log.info("  📧 LOGIN OTP for {} : {}", email, otp);
+        log.info("╚════════════════════════════════════════════╝\n");
 
         sendOtpEmail(email, otp, "Your Pizza App Login OTP");
     }
@@ -137,10 +145,9 @@ public class OtpService {
     // ========== HELPERS ==========
 
     private String generateOtp() {
-        Random random = new Random();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < otpLength; i++) {
-            sb.append(random.nextInt(10));
+            sb.append(secureRandom.nextInt(10));
         }
         return sb.toString();
     }

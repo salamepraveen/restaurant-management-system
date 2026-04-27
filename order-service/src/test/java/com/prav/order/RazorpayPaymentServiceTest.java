@@ -11,7 +11,6 @@ import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -29,15 +28,11 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class RazorpayPaymentServiceTest {
 
-    @InjectMocks
     private RazorpayPaymentService razorpayPaymentService;
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(razorpayPaymentService, "keyId", "rzp_test_id");
-        ReflectionTestUtils.setField(razorpayPaymentService, "keySecret", "rzp_test_secret");
-        ReflectionTestUtils.setField(razorpayPaymentService, "currency", "INR");
-        ReflectionTestUtils.setField(razorpayPaymentService, "refundPercentage", 80);
+        razorpayPaymentService = new RazorpayPaymentService("rzp_test_id", "rzp_test_secret", "INR", 80);
     }
 
     @Test
@@ -75,7 +70,7 @@ public class RazorpayPaymentServiceTest {
         try (MockedConstruction<RazorpayClient> mockedClient = Mockito.mockConstruction(RazorpayClient.class,
                 (mock, context) -> {
                     com.razorpay.OrderClient ordersClient = mock(com.razorpay.OrderClient.class);
-                    when(mock.Orders).thenReturn(ordersClient);
+                    ReflectionTestUtils.setField(mock, "Orders", ordersClient);
                     when(ordersClient.create(any(JSONObject.class))).thenReturn(mockedOrder);
                 })) {
 
@@ -91,7 +86,7 @@ public class RazorpayPaymentServiceTest {
         try (MockedConstruction<RazorpayClient> mockedClient = Mockito.mockConstruction(RazorpayClient.class,
                 (mock, context) -> {
                     com.razorpay.OrderClient ordersClient = mock(com.razorpay.OrderClient.class);
-                    when(mock.Orders).thenReturn(ordersClient);
+                    ReflectionTestUtils.setField(mock, "Orders", ordersClient);
                     when(ordersClient.create(any(JSONObject.class))).thenThrow(new RazorpayException("Error creating order"));
                 })) {
 
@@ -108,7 +103,7 @@ public class RazorpayPaymentServiceTest {
         try (MockedConstruction<RazorpayClient> mockedClient = Mockito.mockConstruction(RazorpayClient.class,
                 (mock, context) -> {
                     com.razorpay.PaymentClient paymentsClient = mock(com.razorpay.PaymentClient.class);
-                    when(mock.Payments).thenReturn(paymentsClient);
+                    ReflectionTestUtils.setField(mock, "Payments", paymentsClient);
                     when(paymentsClient.refund(anyString(), any(JSONObject.class))).thenReturn(mockedRefund);
                 })) {
 
@@ -126,7 +121,7 @@ public class RazorpayPaymentServiceTest {
         try (MockedConstruction<RazorpayClient> mockedClient = Mockito.mockConstruction(RazorpayClient.class,
                 (mock, context) -> {
                     com.razorpay.PaymentClient paymentsClient = mock(com.razorpay.PaymentClient.class);
-                    when(mock.Payments).thenReturn(paymentsClient);
+                    ReflectionTestUtils.setField(mock, "Payments", paymentsClient);
                     when(paymentsClient.refund(anyString(), any(JSONObject.class))).thenThrow(new RazorpayException("Error refunding"));
                 })) {
 

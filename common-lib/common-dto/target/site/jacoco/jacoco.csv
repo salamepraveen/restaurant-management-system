@@ -1,0 +1,7 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+Common DTO,com.prav.common.dto,ApiResponse,203,30,34,0,16,6,30,6,13,6
+Common DTO,com.prav.common.dto,ErrorResponse.ErrorResponseBuilder,23,52,1,1,0,1,3,7,2,7
+Common DTO,com.prav.common.dto,PagedResponse.PagedResponseBuilder,15,49,0,0,0,1,1,8,1,8
+Common DTO,com.prav.common.dto,PagedResponse,191,37,26,0,4,6,26,6,13,6
+Common DTO,com.prav.common.dto,ApiResponse.ApiResponseBuilder,20,37,1,1,0,1,3,5,2,5
+Common DTO,com.prav.common.dto,ErrorResponse,277,37,48,0,17,6,40,6,16,6

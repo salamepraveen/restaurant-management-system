@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,11 +21,14 @@ import jakarta.validation.Valid;
 @RequestMapping("/pizzas")
 public class PizzaController {
 
-    @Autowired
-    private PizzaService service;
+    private final PizzaService service;
+ 
+    public PizzaController(PizzaService service) {
+        this.service = service;
+    }
     
     
- // ==================== INTERNAL — For Feign calls from other services ====================
+ //  INTERNAL — For Feign calls from other services 
 
     @GetMapping("/internal/{id}")
     public Map<String, Object> getPizzaInternal(@PathVariable Long id) {
@@ -43,7 +45,7 @@ public class PizzaController {
         return result;
     }
 
-    // ==================== ADMIN — Manage Pizzas ====================
+    //  ADMIN — Manage Pizzas 
 
     @PostMapping
     public ResponseEntity<ApiResponse<PizzaDTO>> createPizza(
@@ -103,7 +105,7 @@ public class PizzaController {
                         .build());
     }
 
-    // ==================== EVERYONE — Browse Menu ====================
+    //  EVERYONE — Browse Menu 
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<PizzaDTO>>> getAllPizzas() {
@@ -156,7 +158,7 @@ public class PizzaController {
                         .build());
     }
 
-    // ==================== ADMIN — Manage Sizes ====================
+    //  ADMIN — Manage Sizes 
 
     @PostMapping("/{id}/sizes")
     public ResponseEntity<ApiResponse<PizzaSizeDTO>> addSize(
@@ -178,7 +180,7 @@ public class PizzaController {
                         .build());
     }
 
-    // ==================== ADMIN — Manage Toppings ====================
+    //  ADMIN — Manage Toppings 
 
     @PostMapping("/toppings")
     public ResponseEntity<ApiResponse<ToppingDTO>> createTopping(

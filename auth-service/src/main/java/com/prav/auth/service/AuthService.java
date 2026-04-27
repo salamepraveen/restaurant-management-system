@@ -1,7 +1,5 @@
 package com.prav.auth.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.prav.auth.client.UserClient;
@@ -20,16 +18,17 @@ import com.prav.common.exception.ResourceNotFoundException;
 @Service
 public class AuthService {
 
-    @Autowired
-    private UserClient userClient;
+    private final UserClient userClient;
+    private final JwtUtil jwtUtil;
+    private final OtpService otpService;
+    private final org.springframework.security.crypto.password.PasswordEncoder encoder;
 
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    @Autowired
-    private OtpService otpService;
-
-    private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+    public AuthService(UserClient userClient, JwtUtil jwtUtil, OtpService otpService, org.springframework.security.crypto.password.PasswordEncoder encoder) {
+        this.userClient = userClient;
+        this.jwtUtil = jwtUtil;
+        this.otpService = otpService;
+        this.encoder = encoder;
+    }
 
     // ==================== SIGNUP (with OTP verification) ====================
 

@@ -3,6 +3,7 @@ com\prav\pizza\repository\PizzaSizeRepository.class
 com\prav\pizza\client\UserClient.class
 com\prav\pizza\controller\PizzaController.class
 com\prav\pizza\client\PizzaClient.class
+com\prav\pizza\aspect\ApiLoggingAspect.class
 com\prav\pizza\repository\ToppingRepository.class
 com\prav\pizza\dto\PizzaCreateRequestDTO.class
 com\prav\pizza\exception\PizzaNotFoundException.class

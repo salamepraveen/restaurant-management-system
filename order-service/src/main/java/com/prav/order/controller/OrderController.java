@@ -21,13 +21,15 @@ import jakarta.validation.Valid;
 @CrossOrigin(origins = "http://localhost:4200")
 public class OrderController {
 
-    @Autowired
-    private OrderService service;
+    private final OrderService service;
+    private final ReportService reportService;
 
-    @Autowired
-    private ReportService reportService;
+    public OrderController(OrderService service, ReportService reportService) {
+        this.service = service;
+        this.reportService = reportService;
+    }
 
-    // ==================== ORDER CRUD ====================
+    //  ORDER CRUD 
 
     @PostMapping
     public ResponseEntity<ApiResponse<OrderResponseDTO>> placeOrder(
@@ -120,7 +122,7 @@ public class OrderController {
                         .build());
     }
 
-    // ==================== PAYMENT ====================
+    //  PAYMENT 
 
     @PostMapping("/{id}/payment/create")
     public ResponseEntity<ApiResponse<PaymentOrderResponseDTO>> createPaymentOrder(@PathVariable Long id) {
@@ -146,7 +148,7 @@ public class OrderController {
                         .build());
     }
 
-    // ==================== CANCEL ====================
+    //  CANCEL 
 
     @PostMapping("/{id}/cancel")
     public ResponseEntity<ApiResponse<OrderResponseDTO>> cancelOrder(
@@ -162,7 +164,7 @@ public class OrderController {
                         .build());
     }
 
-    // ==================== REPORTS ====================
+    //  REPORTS 
 
     @GetMapping("/reports/revenue")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getRevenue(

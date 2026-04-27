@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OrderController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Order Service</a> &gt; <a href="index.source.html" class="el_package">com.prav.order.controller</a> &gt; <span class="el_source">OrderController.java</span></div><h1>OrderController.java</h1><pre class="source lang-java linenums">package com.prav.order.controller;
+
+import java.time.LocalDateTime;
+import java.util.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import com.prav.order.dto.*;
+import com.prav.order.exception.AccessDeniedException;
+import com.prav.order.service.OrderService;
+import com.prav.order.service.ReportService;
+import com.prav.common.dto.ApiResponse;
+
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping(&quot;/orders&quot;)
+@CrossOrigin(origins = &quot;http://localhost:4200&quot;)
+public class OrderController {
+
+    private final OrderService service;
+    private final ReportService reportService;
+
+<span class="fc" id="L27">    public OrderController(OrderService service, ReportService reportService) {</span>
+<span class="fc" id="L28">        this.service = service;</span>
+<span class="fc" id="L29">        this.reportService = reportService;</span>
+<span class="fc" id="L30">    }</span>
+
+    // ==================== ORDER CRUD ====================
+
+    @PostMapping
+    public ResponseEntity&lt;ApiResponse&lt;OrderResponseDTO&gt;&gt; placeOrder(
+            @RequestHeader(&quot;X-User-Id&quot;) Long userId,
+            @RequestHeader(&quot;X-User-Role&quot;) String role,
+            @Valid @RequestBody OrderRequestDTO request) {
+
+<span class="fc" id="L40">        List&lt;Map&lt;String, Object&gt;&gt; items = request.getItems().stream()</span>
+<span class="fc" id="L41">                .map(item -&gt; {</span>
+<span class="fc" id="L42">                    Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L43">                    map.put(&quot;pizzaId&quot;, item.getPizzaId());</span>
+<span class="fc" id="L44">                    map.put(&quot;quantity&quot;, item.getQuantity());</span>
+<span class="fc" id="L45">                    map.put(&quot;size&quot;, item.getSize());</span>
+<span class="fc" id="L46">                    map.put(&quot;toppings&quot;, item.getToppings());</span>
+<span class="fc" id="L47">                    return map;</span>
+                })
+<span class="fc" id="L49">                .collect(java.util.stream.Collectors.toList());</span>
+
+<span class="fc" id="L51">        OrderResponseDTO order = service.placeOrder(userId, request.getRestaurantId(), request.getDeliveryAddress(), request.getPaymentMethod(), items);</span>
+<span class="fc" id="L52">        return ResponseEntity.status(HttpStatus.CREATED)</span>
+<span class="fc" id="L53">                .body(ApiResponse.&lt;OrderResponseDTO&gt;builder()</span>
+<span class="fc" id="L54">                        .success(true)</span>
+<span class="fc" id="L55">                        .message(&quot;Order placed successfully&quot;)</span>
+<span class="fc" id="L56">                        .data(order)</span>
+<span class="fc" id="L57">                        .build());</span>
+    }
+
+    @GetMapping(&quot;/my&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;List&lt;OrderResponseDTO&gt;&gt;&gt; getMyOrders(
+            @RequestHeader(&quot;X-User-Id&quot;) Long userId) {
+<span class="fc" id="L63">        return ResponseEntity.ok(</span>
+<span class="fc" id="L64">                ApiResponse.&lt;List&lt;OrderResponseDTO&gt;&gt;builder()</span>
+<span class="fc" id="L65">                        .success(true)</span>
+<span class="fc" id="L66">                        .message(&quot;Orders retrieved successfully&quot;)</span>
+<span class="fc" id="L67">                        .data(service.getMyOrders(userId))</span>
+<span class="fc" id="L68">                        .build());</span>
+    }
+
+    @GetMapping(&quot;/restaurant&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;List&lt;OrderResponseDTO&gt;&gt;&gt; getRestaurantOrders(
+            @RequestHeader(&quot;X-User-Id&quot;) Long userId,
+            @RequestHeader(&quot;X-User-Role&quot;) String role,
+            @RequestHeader(&quot;X-Restaurant-Id&quot;) Long restaurantId) {
+
+<span class="fc bfc" id="L77" title="All 4 branches covered.">        if (!&quot;STAFF&quot;.equals(role) &amp;&amp; !&quot;ADMIN&quot;.equals(role))</span>
+<span class="fc" id="L78">            throw new AccessDeniedException(&quot;Only STAFF or ADMIN can view restaurant orders&quot;);</span>
+
+<span class="fc" id="L80">        return ResponseEntity.ok(</span>
+<span class="fc" id="L81">                ApiResponse.&lt;List&lt;OrderResponseDTO&gt;&gt;builder()</span>
+<span class="fc" id="L82">                        .success(true)</span>
+<span class="fc" id="L83">                        .message(&quot;Restaurant orders retrieved successfully&quot;)</span>
+<span class="fc" id="L84">                        .data(service.getRestaurantOrders(restaurantId))</span>
+<span class="fc" id="L85">                        .build());</span>
+    }
+
+    @GetMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;OrderResponseDTO&gt;&gt; getOrderById(@PathVariable Long id) {
+<span class="nc" id="L90">        return ResponseEntity.ok(</span>
+<span class="nc" id="L91">                ApiResponse.&lt;OrderResponseDTO&gt;builder()</span>
+<span class="nc" id="L92">                        .success(true)</span>
+<span class="nc" id="L93">                        .message(&quot;Order retrieved successfully&quot;)</span>
+<span class="nc" id="L94">                        .data(service.getOrderById(id))</span>
+<span class="nc" id="L95">                        .build());</span>
+    }
+
+    @GetMapping(&quot;/{id}/items&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;List&lt;OrderItemResponseDTO&gt;&gt;&gt; getOrderItems(@PathVariable Long id) {
+<span class="fc" id="L100">        return ResponseEntity.ok(</span>
+<span class="fc" id="L101">                ApiResponse.&lt;List&lt;OrderItemResponseDTO&gt;&gt;builder()</span>
+<span class="fc" id="L102">                        .success(true)</span>
+<span class="fc" id="L103">                        .message(&quot;Order items retrieved successfully&quot;)</span>
+<span class="fc" id="L104">                        .data(service.getOrderItems(id))</span>
+<span class="fc" id="L105">                        .build());</span>
+    }
+
+    @PutMapping(&quot;/{id}/status&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;OrderResponseDTO&gt;&gt; updateStatus(
+            @PathVariable Long id,
+            @RequestHeader(&quot;X-User-Role&quot;) String role,
+            @RequestParam String status) {
+
+<span class="pc bpc" id="L114" title="1 of 4 branches missed.">        if (!&quot;STAFF&quot;.equals(role) &amp;&amp; !&quot;ADMIN&quot;.equals(role))</span>
+<span class="fc" id="L115">            throw new AccessDeniedException(&quot;Only STAFF or ADMIN can update order status&quot;);</span>
+
+<span class="fc" id="L117">        return ResponseEntity.ok(</span>
+<span class="fc" id="L118">                ApiResponse.&lt;OrderResponseDTO&gt;builder()</span>
+<span class="fc" id="L119">                        .success(true)</span>
+<span class="fc" id="L120">                        .message(&quot;Order status updated to &quot; + status)</span>
+<span class="fc" id="L121">                        .data(service.updateStatus(id, status))</span>
+<span class="fc" id="L122">                        .build());</span>
+    }
+
+    // ==================== PAYMENT ====================
+
+    @PostMapping(&quot;/{id}/payment/create&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;PaymentOrderResponseDTO&gt;&gt; createPaymentOrder(@PathVariable Long id) {
+<span class="fc" id="L129">        PaymentOrderResponseDTO payment = service.createPaymentOrder(id);</span>
+<span class="fc" id="L130">        return ResponseEntity.ok(</span>
+<span class="fc" id="L131">                ApiResponse.&lt;PaymentOrderResponseDTO&gt;builder()</span>
+<span class="fc" id="L132">                        .success(true)</span>
+<span class="fc" id="L133">                        .message(&quot;Payment order created&quot;)</span>
+<span class="fc" id="L134">                        .data(payment)</span>
+<span class="fc" id="L135">                        .build());</span>
+    }
+
+    @PostMapping(&quot;/{id}/payment/verify&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;OrderResponseDTO&gt;&gt; verifyPayment(
+            @PathVariable Long id,
+            @Valid @RequestBody PaymentVerifyRequestDTO request) {
+<span class="fc" id="L142">        OrderResponseDTO order = service.verifyPayment(id, request);</span>
+<span class="fc" id="L143">        return ResponseEntity.ok(</span>
+<span class="fc" id="L144">                ApiResponse.&lt;OrderResponseDTO&gt;builder()</span>
+<span class="fc" id="L145">                        .success(true)</span>
+<span class="fc" id="L146">                        .message(&quot;Payment verified and order confirmed&quot;)</span>
+<span class="fc" id="L147">                        .data(order)</span>
+<span class="fc" id="L148">                        .build());</span>
+    }
+
+    // ==================== CANCEL ====================
+
+    @PostMapping(&quot;/{id}/cancel&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;OrderResponseDTO&gt;&gt; cancelOrder(
+            @PathVariable Long id,
+            @RequestHeader(&quot;X-User-Id&quot;) Long userId,
+            @Valid @RequestBody OrderCancelRequestDTO request) {
+<span class="fc" id="L158">        OrderResponseDTO order = service.cancelOrder(id, userId, request.getReason());</span>
+<span class="fc" id="L159">        return ResponseEntity.ok(</span>
+<span class="fc" id="L160">                ApiResponse.&lt;OrderResponseDTO&gt;builder()</span>
+<span class="fc" id="L161">                        .success(true)</span>
+<span class="fc" id="L162">                        .message(&quot;Order cancelled&quot;)</span>
+<span class="fc" id="L163">                        .data(order)</span>
+<span class="fc" id="L164">                        .build());</span>
+    }
+
+    // ==================== REPORTS ====================
+
+    @GetMapping(&quot;/reports/revenue&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;Map&lt;String, Object&gt;&gt;&gt; getRevenue(
+            @RequestHeader(&quot;X-User-Role&quot;) String role,
+            @RequestHeader(&quot;X-Restaurant-Id&quot;) Long restaurantId) {
+<span class="fc bfc" id="L173" title="All 2 branches covered.">        if (!&quot;ADMIN&quot;.equals(role)) throw new AccessDeniedException(&quot;Only ADMIN can view revenue&quot;);</span>
+<span class="fc" id="L174">        return ResponseEntity.ok(</span>
+<span class="fc" id="L175">                ApiResponse.&lt;Map&lt;String, Object&gt;&gt;builder()</span>
+<span class="fc" id="L176">                        .success(true).message(&quot;Revenue retrieved&quot;)</span>
+<span class="fc" id="L177">                        .data(reportService.getRevenueByRestaurant(restaurantId)).build());</span>
+    }
+
+    @GetMapping(&quot;/reports/revenue/range&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;Map&lt;String, Object&gt;&gt;&gt; getRevenueByRange(
+            @RequestHeader(&quot;X-User-Role&quot;) String role,
+            @RequestHeader(&quot;X-Restaurant-Id&quot;) Long restaurantId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">        if (!&quot;ADMIN&quot;.equals(role)) throw new AccessDeniedException(&quot;Only ADMIN can view revenue&quot;);</span>
+<span class="fc" id="L187">        return ResponseEntity.ok(</span>
+<span class="fc" id="L188">                ApiResponse.&lt;Map&lt;String, Object&gt;&gt;builder()</span>
+<span class="fc" id="L189">                        .success(true).message(&quot;Revenue range retrieved&quot;)</span>
+<span class="fc" id="L190">                        .data(reportService.getRevenueByDateRange(restaurantId, start, end)).build());</span>
+    }
+
+    @GetMapping(&quot;/reports/revenue/daily&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;List&lt;Map&lt;String, Object&gt;&gt;&gt;&gt; getDailyRevenue(
+            @RequestHeader(&quot;X-User-Role&quot;) String role,
+            @RequestHeader(&quot;X-Restaurant-Id&quot;) Long restaurantId,
+            @RequestParam(defaultValue = &quot;7&quot;) int days) {
+<span class="pc bpc" id="L198" title="1 of 4 branches missed.">        if (!&quot;ADMIN&quot;.equals(role) &amp;&amp; !&quot;STAFF&quot;.equals(role)) throw new AccessDeniedException(&quot;Only STAFF or ADMIN&quot;);</span>
+<span class="fc" id="L199">        return ResponseEntity.ok(</span>
+<span class="fc" id="L200">                ApiResponse.&lt;List&lt;Map&lt;String, Object&gt;&gt;&gt;builder()</span>
+<span class="fc" id="L201">                        .success(true).message(&quot;Daily revenue retrieved&quot;)</span>
+<span class="fc" id="L202">                        .data(reportService.getDailyRevenue(restaurantId, days)).build());</span>
+    }
+
+    @GetMapping(&quot;/reports/pizzas/popular&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;List&lt;Map&lt;String, Object&gt;&gt;&gt;&gt; getPopularPizzas(
+            @RequestHeader(&quot;X-User-Role&quot;) String role,
+            @RequestHeader(&quot;X-Restaurant-Id&quot;) Long restaurantId) {
+<span class="fc bfc" id="L209" title="All 2 branches covered.">        if (!&quot;ADMIN&quot;.equals(role)) throw new AccessDeniedException(&quot;Only ADMIN&quot;);</span>
+<span class="fc" id="L210">        return ResponseEntity.ok(</span>
+<span class="fc" id="L211">                ApiResponse.&lt;List&lt;Map&lt;String, Object&gt;&gt;&gt;builder()</span>
+<span class="fc" id="L212">                        .success(true).message(&quot;Popular pizzas retrieved&quot;)</span>
+<span class="fc" id="L213">                        .data(reportService.getPopularPizzas(restaurantId)).build());</span>
+    }
+
+    @GetMapping(&quot;/reports/customers/top&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;List&lt;Map&lt;String, Object&gt;&gt;&gt;&gt; getTopCustomers(
+            @RequestHeader(&quot;X-User-Role&quot;) String role,
+            @RequestHeader(&quot;X-Restaurant-Id&quot;) Long restaurantId) {
+<span class="pc bpc" id="L220" title="1 of 2 branches missed.">        if (!&quot;ADMIN&quot;.equals(role)) throw new AccessDeniedException(&quot;Only ADMIN&quot;);</span>
+<span class="fc" id="L221">        return ResponseEntity.ok(</span>
+<span class="fc" id="L222">                ApiResponse.&lt;List&lt;Map&lt;String, Object&gt;&gt;&gt;builder()</span>
+<span class="fc" id="L223">                        .success(true).message(&quot;Top customers retrieved&quot;)</span>
+<span class="fc" id="L224">                        .data(reportService.getTopCustomers(restaurantId)).build());</span>
+    }
+
+    @GetMapping(&quot;/reports/orders/status&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;Map&lt;String, Object&gt;&gt;&gt; getOrderStatusSummary(
+            @RequestHeader(&quot;X-User-Role&quot;) String role,
+            @RequestHeader(&quot;X-Restaurant-Id&quot;) Long restaurantId) {
+<span class="fc bfc" id="L231" title="All 4 branches covered.">        if (!&quot;ADMIN&quot;.equals(role) &amp;&amp; !&quot;STAFF&quot;.equals(role))</span>
+<span class="fc" id="L232">            throw new AccessDeniedException(&quot;Only STAFF or ADMIN&quot;);</span>
+<span class="fc" id="L233">        return ResponseEntity.ok(</span>
+<span class="fc" id="L234">                ApiResponse.&lt;Map&lt;String, Object&gt;&gt;builder()</span>
+<span class="fc" id="L235">                        .success(true).message(&quot;Status summary retrieved&quot;)</span>
+<span class="fc" id="L236">                        .data(reportService.getOrderStatusSummary(restaurantId)).build());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

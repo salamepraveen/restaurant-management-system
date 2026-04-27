@@ -10,6 +10,8 @@ import com.prav.order.repository.OrderItemRepository;
 import com.prav.order.repository.OrderRepository;
 import com.prav.order.service.OrderService;
 import com.prav.order.service.RazorpayPaymentService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -23,28 +25,35 @@ import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImpl implements OrderService {
+ 
+    private static final Logger log = LoggerFactory.getLogger(OrderServiceImpl.class);
+    private static final String BORDER = "========================================";
 
-    @Autowired
-    private OrderRepository orderRepo;
+    private final OrderRepository orderRepo;
+    private final OrderItemRepository orderItemRepo;
+    private final PizzaClient pizzaClient;
+    private final RazorpayPaymentService paymentService;
+    private final String paymentMode;
 
-    @Autowired
-    private OrderItemRepository orderItemRepo;
-
-    @Autowired
-    private PizzaClient pizzaClient;
-
-    @Autowired
-    private RazorpayPaymentService paymentService;
-
-    @Value("${payment.mode:dummy}")
-    private String paymentMode;
+    public OrderServiceImpl(
+            OrderRepository orderRepo,
+            OrderItemRepository orderItemRepo,
+            PizzaClient pizzaClient,
+            RazorpayPaymentService paymentService,
+            @Value("${payment.mode:dummy}") String paymentMode) {
+        this.orderRepo = orderRepo;
+        this.orderItemRepo = orderItemRepo;
+        this.pizzaClient = pizzaClient;
+        this.paymentService = paymentService;
+        this.paymentMode = paymentMode;
+    }
 
     // ==================== PLACE ORDER ====================
 
     @Override
     @Transactional
     public OrderResponseDTO placeOrder(Long userId, Long restaurantId, String deliveryAddress, String paymentMethod, List<Map<String, Object>> items) {
-        System.out.println("  [ORDER] Placing order for user: " + userId + ", restaurant: " + restaurantId);
+        log.info("  [ORDER] Placing order for user: {}, restaurant: {}", userId, restaurantId);
 
         BigDecimal totalAmount = BigDecimal.ZERO;
         List<OrderItem> orderItems = new ArrayList<>();
@@ -123,7 +132,7 @@ public class OrderServiceImpl implements OrderService {
         }
         order.setOrderItems(orderItems);
 
-        System.out.println("  [ORDER] Order " + order.getId() + " created. Total: " + totalAmount);
+        log.info("  [ORDER] Order {} created. Total: {}", order.getId(), totalAmount);
         return convertToDTO(order);
     }
 
@@ -207,7 +216,7 @@ public class OrderServiceImpl implements OrderService {
 
         order.setStatus(newStatus);
         order = orderRepo.save(order);
-        System.out.println("  [ORDER] Order " + id + " status: " + newStatus);
+        log.info("  [ORDER] Order {} status: {}", id, newStatus);
         return convertToDTO(order);
     }
 
@@ -229,12 +238,14 @@ public class OrderServiceImpl implements OrderService {
             order.setRazorpayOrderId(fakeOrderId);
             orderRepo.save(order);
 
-            System.out.println("========================================");
-            System.out.println("  [DUMMY] PAYMENT ORDER CREATED");
-            System.out.println("  Order ID: " + orderId);
-            System.out.println("  Fake Razorpay ID: " + fakeOrderId);
-            System.out.println("  Amount: " + order.getTotalAmount());
-            System.out.println("========================================");
+        if (log.isInfoEnabled()) {
+            log.info(BORDER);
+            log.info("  [DUMMY] PAYMENT ORDER CREATED");
+            log.info("  Order ID: {}", orderId);
+            log.info("  Fake Razorpay ID: {}", fakeOrderId);
+            log.info("  Amount: {}", order.getTotalAmount());
+            log.info(BORDER);
+        }
 
             return PaymentOrderResponseDTO.builder()
                     .razorpayOrderId(fakeOrderId)
@@ -278,10 +289,12 @@ public class OrderServiceImpl implements OrderService {
             order.setStatus(Order.OrderStatus.CONFIRMED);
             order = orderRepo.save(order);
 
-            System.out.println("========================================");
-            System.out.println("  [DUMMY] PAYMENT VERIFIED & ORDER CONFIRMED");
-            System.out.println("  Order: " + orderId);
-            System.out.println("========================================");
+        if (log.isInfoEnabled()) {
+            log.info(BORDER);
+            log.info("  [DUMMY] PAYMENT VERIFIED & ORDER CONFIRMED");
+            log.info("  Order: {}", orderId);
+            log.info(BORDER);
+        }
 
             return convertToDTO(order);
         }
@@ -304,10 +317,12 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(Order.OrderStatus.CONFIRMED);
         order = orderRepo.save(order);
 
-        System.out.println("========================================");
-        System.out.println("  PAYMENT VERIFIED & ORDER CONFIRMED");
-        System.out.println("  Order: " + orderId + " | Payment: " + request.getRazorpayPaymentId());
-        System.out.println("========================================");
+        if (log.isInfoEnabled()) {
+            log.info(BORDER);
+            log.info("  PAYMENT VERIFIED & ORDER CONFIRMED");
+            log.info("  Order: {} | Payment: {}", orderId, request.getRazorpayPaymentId());
+            log.info(BORDER);
+        }
 
         return convertToDTO(order);
     }
@@ -331,7 +346,7 @@ public class OrderServiceImpl implements OrderService {
         order.setCancellationReason(reason);
 
         if (order.getPaymentStatus() == Order.PaymentStatus.COMPLETED && order.getRazorpayPaymentId() != null) {
-            System.out.println("  [CANCEL] Payment done. Processing refund...");
+            log.info("  [CANCEL] Payment done. Processing refund...");
 
             if ("dummy".equals(paymentMode)) {
                 // ========== DUMMY REFUND ==========
@@ -340,26 +355,28 @@ public class OrderServiceImpl implements OrderService {
                 order.setRefundAmount(refundAmount);
                 order.setRefundId("refund_dummy_" + System.currentTimeMillis());
                 order.setPaymentStatus(Order.PaymentStatus.PARTIALLY_REFUNDED);
-                System.out.println("  [DUMMY] Refund (70%): " + refundAmount + " | Deduction: " + deduction);
+                log.info("  [DUMMY] Refund (70%): {} | Deduction: {}", refundAmount, deduction);
             } else {
                 // ========== REAL RAZORPAY REFUND ==========
                 RefundResponseDTO refund = paymentService.processRefund(order.getId(), order.getTotalAmount(), order.getRazorpayPaymentId());
                 order.setRefundAmount(refund.getRefundAmount());
                 order.setRefundId(refund.getRefundId());
                 order.setPaymentStatus(Order.PaymentStatus.PARTIALLY_REFUNDED);
-                System.out.println("  [CANCEL] Refund: " + refund.getRefundAmount());
+                log.info("  [CANCEL] Refund: {}", refund.getRefundAmount());
             }
         } else {
-            System.out.println("  [CANCEL] No payment. No refund needed.");
+            log.info("  [CANCEL] No payment. No refund needed.");
         }
 
         order = orderRepo.save(order);
 
-        System.out.println("========================================");
-        System.out.println("  ORDER CANCELLED: " + orderId);
-        System.out.println("  Reason: " + reason);
-        System.out.println("  Refund: " + (order.getRefundAmount() != null ? order.getRefundAmount() : "0 (no payment)"));
-        System.out.println("========================================");
+        if (log.isInfoEnabled()) {
+            log.info(BORDER);
+            log.info("  ORDER CANCELLED: {}", orderId);
+            log.info("  Reason: {}", reason);
+            log.info("  Refund: {}", (order.getRefundAmount() != null ? order.getRefundAmount() : "0 (no payment)"));
+            log.info(BORDER);
+        }
 
         return convertToDTO(order);
     }

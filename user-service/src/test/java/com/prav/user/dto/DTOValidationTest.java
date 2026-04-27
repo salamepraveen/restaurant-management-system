@@ -19,7 +19,7 @@ class DTOValidationTest {
         validator = factory.getValidator();
     }
 
-    // ========== UserDTO ==========
+    //  UserDTO 
 
     @Test
     void userDTO_allFieldsValid_noErrors() {
@@ -169,7 +169,7 @@ class DTOValidationTest {
         assertTrue(violations.isEmpty());
     }
 
-    // ========== PromoteRequestDTO ==========
+    //  PromoteRequestDTO 
 
     @Test
     void promoteRequest_validStaff_noErrors() {
@@ -235,7 +235,7 @@ class DTOValidationTest {
         assertFalse(violations.isEmpty());
     }
 
-    // ========== PizzaSizeRequestDTO ==========
+    //  PizzaSizeRequestDTO 
 
     @Test
     void pizzaSizeRequest_validMedium_noErrors() {

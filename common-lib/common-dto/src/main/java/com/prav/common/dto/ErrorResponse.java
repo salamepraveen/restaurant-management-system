@@ -20,7 +20,7 @@ public class ErrorResponse {
     @Builder.Default
     private LocalDateTime timestamp = LocalDateTime.now();
     private List<String> fieldErrors;
-
+ 
     public static ErrorResponse of(int status, String error, String message, String path) {
         return ErrorResponse.builder()
                 .status(status)
