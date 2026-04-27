@@ -17,6 +17,9 @@
     <packaging>pom</packaging>
 
 
+
+         
+
     <!-- Modules (FLAT STRUCTURE) -->
     <modules>
         <module>common-lib/common-dto</module>
