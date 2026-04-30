@@ -67,17 +67,35 @@ public class JwtFilter2 implements WebFilter {
             String userId = claims.getSubject();
             String role = claims.get("role", String.class);
             
+            Number restaurantIdNum = claims.get("assignedRestaurantId", Number.class);
+            String restaurantId = restaurantIdNum != null ? restaurantIdNum.toString() : null;
+            
+            String rawRole = role;
             if (role != null && !role.startsWith("ROLE_")) {
                 role = "ROLE_" + role.toUpperCase();
             }
 
-            log.info("======= JWT OK: userId={} role={} =======", userId, role);
+            log.info("======= JWT OK: userId={} role={} restaurantId={} =======", userId, role, restaurantId);
 
             UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                     userId, null, List.of(new SimpleGrantedAuthority(role))
             );
- 
-            return chain.filter(exchange)
+
+            ServerHttpRequest.Builder requestBuilder = request.mutate()
+                    .headers(headers -> {
+                        headers.set("X-User-Id", userId);
+                        if (rawRole != null) {
+                            headers.set("X-User-Role", rawRole.toUpperCase());
+                        }
+                        if (restaurantId != null) {
+                            headers.set("X-Restaurant-Id", restaurantId);
+                        }
+                    });
+
+            ServerHttpRequest mutatedRequest = requestBuilder.build();
+            ServerWebExchange mutatedExchange = exchange.mutate().request(mutatedRequest).build();
+
+            return chain.filter(mutatedExchange)
                     .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth));
  
         } catch (Exception e) {

@@ -10,10 +10,10 @@ public class AuthRequest {
     private String username;
 
     @NotBlank(message = "Password is required")
-    @Size(min = 4, message = "Password must be at least 4 characters")
+    @Size(min = 4, message = "Password must be at least 4 characters") // must be spcial character verufy laterr all the verfication.
     private String password;
 
-    private String email;
+    private String email; //make sure to use the regex pattern
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
@@ -23,4 +23,5 @@ public class AuthRequest {
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+    
 }
