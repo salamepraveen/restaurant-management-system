@@ -25,7 +25,8 @@ class DTOValidationTest {
     void userDTO_allFieldsValid_noErrors() {
         UserDTO dto = new UserDTO();
         dto.setUsername("prav");
-        dto.setPassword("pass123");
+        dto.setPassword("Password@123");
+        dto.setEmail("test@example.com");
 
         Set<ConstraintViolation<UserDTO>> violations = validator.validate(dto);
         assertTrue(violations.isEmpty());
@@ -35,7 +36,8 @@ class DTOValidationTest {
     void userDTO_nullUsername_returnsError() {
         UserDTO dto = new UserDTO();
         dto.setUsername(null);
-        dto.setPassword("pass123");
+        dto.setPassword("Password@123");
+        dto.setEmail("test@example.com");
 
         Set<ConstraintViolation<UserDTO>> violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
@@ -46,7 +48,8 @@ class DTOValidationTest {
     void userDTO_blankUsername_returnsError() {
         UserDTO dto = new UserDTO();
         dto.setUsername("   ");
-        dto.setPassword("pass123");
+        dto.setPassword("Password@123");
+        dto.setEmail("test@example.com");
 
         Set<ConstraintViolation<UserDTO>> violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
@@ -56,7 +59,8 @@ class DTOValidationTest {
     void userDTO_usernameTooShort_returnsError() {
         UserDTO dto = new UserDTO();
         dto.setUsername("p");
-        dto.setPassword("pass123");
+        dto.setPassword("Password@123");
+        dto.setEmail("test@example.com");
 
         Set<ConstraintViolation<UserDTO>> violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
@@ -67,7 +71,8 @@ class DTOValidationTest {
     void userDTO_usernameTooLong_returnsError() {
         UserDTO dto = new UserDTO();
         dto.setUsername("p".repeat(51));
-        dto.setPassword("pass123");
+        dto.setPassword("Password@123");
+        dto.setEmail("test@example.com");
 
         Set<ConstraintViolation<UserDTO>> violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
@@ -78,7 +83,8 @@ class DTOValidationTest {
     void userDTO_usernameExactly2Chars_valid() {
         UserDTO dto = new UserDTO();
         dto.setUsername("pr");
-        dto.setPassword("pass123");
+        dto.setPassword("Password@123");
+        dto.setEmail("test@example.com");
 
         Set<ConstraintViolation<UserDTO>> violations = validator.validate(dto);
         assertTrue(violations.isEmpty());
@@ -88,7 +94,8 @@ class DTOValidationTest {
     void userDTO_usernameExactly50Chars_valid() {
         UserDTO dto = new UserDTO();
         dto.setUsername("p".repeat(50));
-        dto.setPassword("pass123");
+        dto.setPassword("Password@123");
+        dto.setEmail("test@example.com");
 
         Set<ConstraintViolation<UserDTO>> violations = validator.validate(dto);
         assertTrue(violations.isEmpty());
@@ -99,6 +106,7 @@ class DTOValidationTest {
         UserDTO dto = new UserDTO();
         dto.setUsername("prav");
         dto.setPassword(null);
+        dto.setEmail("test@example.com");
 
         Set<ConstraintViolation<UserDTO>> violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
@@ -110,16 +118,18 @@ class DTOValidationTest {
         UserDTO dto = new UserDTO();
         dto.setUsername("prav");
         dto.setPassword("   ");
+        dto.setEmail("test@example.com");
 
         Set<ConstraintViolation<UserDTO>> violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
     }
 
     @Test
-    void userDTO_passwordTooShort_returnsError() {
+    void userDTO_invalidPassword_returnsError() {
         UserDTO dto = new UserDTO();
         dto.setUsername("prav");
         dto.setPassword("12345");
+        dto.setEmail("test@example.com");
 
         Set<ConstraintViolation<UserDTO>> violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
@@ -127,31 +137,23 @@ class DTOValidationTest {
     }
 
     @Test
-    void userDTO_passwordTooLong_returnsError() {
+    void userDTO_invalidEmail_returnsError() {
         UserDTO dto = new UserDTO();
         dto.setUsername("prav");
-        dto.setPassword("p".repeat(101));
+        dto.setPassword("Password@123");
+        dto.setEmail("invalid-email");
 
         Set<ConstraintViolation<UserDTO>> violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
-        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("password")));
-    }
-
-    @Test
-    void userDTO_passwordExactly6Chars_valid() {
-        UserDTO dto = new UserDTO();
-        dto.setUsername("prav");
-        dto.setPassword("123456");
-
-        Set<ConstraintViolation<UserDTO>> violations = validator.validate(dto);
-        assertTrue(violations.isEmpty());
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("email")));
     }
 
     @Test
     void userDTO_nullRole_noError() {
         UserDTO dto = new UserDTO();
         dto.setUsername("prav");
-        dto.setPassword("pass123");
+        dto.setPassword("Password@123");
+        dto.setEmail("test@example.com");
         dto.setRole(null);
 
         Set<ConstraintViolation<UserDTO>> violations = validator.validate(dto);
@@ -162,7 +164,8 @@ class DTOValidationTest {
     void userDTO_nullAssignedRestaurantId_noError() {
         UserDTO dto = new UserDTO();
         dto.setUsername("prav");
-        dto.setPassword("pass123");
+        dto.setPassword("Password@123");
+        dto.setEmail("test@example.com");
         dto.setAssignedRestaurantId(null);
 
         Set<ConstraintViolation<UserDTO>> violations = validator.validate(dto);
@@ -319,5 +322,54 @@ class DTOValidationTest {
 
         Set<ConstraintViolation<PizzaSizeRequestDTO>> violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
+    }
+
+    // ProfileUpdateRequestDTO
+
+    @Test
+    void profileUpdateRequest_allValid_noErrors() {
+        ProfileUpdateRequestDTO dto = new ProfileUpdateRequestDTO();
+        dto.setEmail("user@example.com");
+        dto.setPhoneNumber("1234567890");
+        dto.setAddress("123 Pizza Street, NY");
+
+        Set<ConstraintViolation<ProfileUpdateRequestDTO>> violations = validator.validate(dto);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void profileUpdateRequest_invalidEmail_returnsError() {
+        ProfileUpdateRequestDTO dto = new ProfileUpdateRequestDTO();
+        dto.setEmail("invalid-email");
+        dto.setPhoneNumber("1234567890");
+        dto.setAddress("123 Pizza Street, NY");
+
+        Set<ConstraintViolation<ProfileUpdateRequestDTO>> violations = validator.validate(dto);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("email")));
+    }
+
+    @Test
+    void profileUpdateRequest_invalidPhone_returnsError() {
+        ProfileUpdateRequestDTO dto = new ProfileUpdateRequestDTO();
+        dto.setEmail("user@example.com");
+        dto.setPhoneNumber("12345"); // Too short
+        dto.setAddress("123 Pizza Street, NY");
+
+        Set<ConstraintViolation<ProfileUpdateRequestDTO>> violations = validator.validate(dto);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("phoneNumber")));
+    }
+
+    @Test
+    void profileUpdateRequest_invalidAddress_returnsError() {
+        ProfileUpdateRequestDTO dto = new ProfileUpdateRequestDTO();
+        dto.setEmail("user@example.com");
+        dto.setPhoneNumber("1234567890");
+        dto.setAddress("short"); // Too short
+
+        Set<ConstraintViolation<ProfileUpdateRequestDTO>> violations = validator.validate(dto);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("address")));
     }
 }

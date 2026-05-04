@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.prav.user.dto.ProfileUpdateRequestDTO;
 import com.prav.user.dto.PromoteRequestDTO;
 import com.prav.user.dto.RestaurantCreateRequestDTO;
 import com.prav.user.dto.UserDTO;
@@ -252,7 +253,7 @@ public class UserController {
     @PutMapping("/profile")
     public ResponseEntity<ApiResponse<UserDTO>> updateProfile(
             @RequestHeader("X-User-Id") Long userId,
-            @RequestBody UserDTO request) {
+            @Valid @RequestBody ProfileUpdateRequestDTO request) {
         
         User updatedUser = service.updateProfile(userId, request.getEmail(), request.getPhoneNumber(), request.getAddress());
         

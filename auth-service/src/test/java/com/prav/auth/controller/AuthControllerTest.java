@@ -39,7 +39,8 @@ class AuthControllerTest {
 
         AuthRequest request = new AuthRequest();
         request.setUsername("testuser");
-        request.setPassword("password123");
+        request.setPassword("Password@123");
+        request.setEmail("test@example.com");
 
         mockMvc.perform(post("/auth/signin")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -53,7 +54,8 @@ class AuthControllerTest {
     void signin_validationFailure() throws Exception {
         AuthRequest request = new AuthRequest();
         request.setUsername(""); // Blank username
-        request.setPassword("123"); // Too short
+        request.setPassword("123"); // Too short / invalid pattern
+        request.setEmail("invalid");
 
         mockMvc.perform(post("/auth/signin")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -70,7 +72,8 @@ class AuthControllerTest {
 
         AuthRequest request = new AuthRequest();
         request.setUsername("newuser");
-        request.setPassword("password123");
+        request.setPassword("Password@123");
+        request.setEmail("test@example.com");
 
         mockMvc.perform(post("/auth/signup/direct")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -84,7 +87,7 @@ class AuthControllerTest {
         OtpRequestDTO request = new OtpRequestDTO();
         request.setUsername("user");
         request.setEmail("test@test.com");
-        request.setPassword("password123");
+        request.setPassword("Password@123");
 
         mockMvc.perform(post("/auth/signup/request")
                 .contentType(MediaType.APPLICATION_JSON)

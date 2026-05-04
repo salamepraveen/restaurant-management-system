@@ -5,6 +5,7 @@ import com.prav.user.controller.UserController;
 import com.prav.user.dto.PromoteRequestDTO;
 import com.prav.user.dto.RestaurantCreateRequestDTO;
 import com.prav.user.dto.UserDTO;
+import com.prav.user.dto.ProfileUpdateRequestDTO;
 import com.prav.user.exception.*;
 import com.prav.user.model.User;
 import com.prav.user.repository.RestaurantRepository;
@@ -73,7 +74,8 @@ class UserControllerTest {
 
         UserDTO dto = new UserDTO();
         dto.setUsername("prav");
-        dto.setPassword("password");
+        dto.setPassword("Password@123");
+        dto.setEmail("test@example.com");
 
         mockMvc.perform(post("/users/internal")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -89,7 +91,8 @@ class UserControllerTest {
 
         UserDTO dto = new UserDTO();
         dto.setUsername("prav");
-        dto.setPassword("password");
+        dto.setPassword("Password@123");
+        dto.setEmail("test@example.com");
 
         mockMvc.perform(post("/users/internal")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -352,5 +355,42 @@ class UserControllerTest {
                         .header("X-Restaurant-Id", 10))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.message").value("User not found"));
+    }
+    @Test
+    void updateProfile_success() throws Exception {
+        User updated = new User();
+        updated.setId(1L);
+        updated.setUsername("prav");
+        updated.setEmail("new@example.com");
+        updated.setPhoneNumber("1234567890");
+        updated.setAddress("123 New Address, City");
+        when(service.updateProfile(1L, "new@example.com", "1234567890", "123 New Address, City")).thenReturn(updated);
+
+        ProfileUpdateRequestDTO dto = new ProfileUpdateRequestDTO();
+        dto.setEmail("new@example.com");
+        dto.setPhoneNumber("1234567890");
+        dto.setAddress("123 New Address, City");
+
+        mockMvc.perform(put("/users/profile")
+                        .header("X-User-Id", 1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.email").value("new@example.com"));
+    }
+
+    @Test
+    void updateProfile_validationFailure() throws Exception {
+        ProfileUpdateRequestDTO dto = new ProfileUpdateRequestDTO();
+        dto.setEmail("invalid");
+        dto.setPhoneNumber("123");
+        dto.setAddress("short");
+
+        mockMvc.perform(put("/users/profile")
+                        .header("X-User-Id", 1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isBadRequest());
     }
 }

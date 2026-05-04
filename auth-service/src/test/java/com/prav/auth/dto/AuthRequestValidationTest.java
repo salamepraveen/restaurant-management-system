@@ -27,7 +27,8 @@ public class AuthRequestValidationTest {
     void testValidRequest_NoViolations() {
         AuthRequest req = new AuthRequest();
         req.setUsername("testuser");
-        req.setPassword("password123");
+        req.setPassword("Password@123");
+        req.setEmail("test@example.com");
 
         Set<ConstraintViolation<AuthRequest>> violations = validator.validate(req);
         assertTrue(violations.isEmpty());
@@ -37,7 +38,8 @@ public class AuthRequestValidationTest {
     void testBlankUsername_OneViolation() {
         AuthRequest req = new AuthRequest();
         req.setUsername("");
-        req.setPassword("password123");
+        req.setPassword("Password@123");
+        req.setEmail("test@example.com");
 
         Set<ConstraintViolation<AuthRequest>> violations = validator.validate(req);
         assertEquals(1, violations.size());
@@ -45,23 +47,25 @@ public class AuthRequestValidationTest {
     }
 
     @Test
-    void testShortPassword_OneViolation() {
+    void testInvalidPassword_OneViolation() {
         AuthRequest req = new AuthRequest();
         req.setUsername("testuser");
         req.setPassword("12");
+        req.setEmail("test@example.com");
 
         Set<ConstraintViolation<AuthRequest>> violations = validator.validate(req);
         assertEquals(1, violations.size());
-        assertEquals("Password must be at least 4 characters", violations.iterator().next().getMessage());
+        assertEquals("Password must be at least 8 characters long, contain at least one digit, one lowercase letter, one uppercase letter, and one special character", violations.iterator().next().getMessage());
     }
 
     @Test
-    void testBothInvalid_TwoViolations() {
+    void testAllInvalid_Violations() {
         AuthRequest req = new AuthRequest();
         req.setUsername("");
         req.setPassword("");
+        req.setEmail("invalid-email");
 
         Set<ConstraintViolation<AuthRequest>> violations = validator.validate(req);
-        assertEquals(3, violations.size()); // 1 for username blank, 2 for password blank (@NotBlank + @Size)
+        assertEquals(4, violations.size()); // 1 for username blank, 2 for password (NotBlank + Pattern), 1 for email Pattern
     }
 }

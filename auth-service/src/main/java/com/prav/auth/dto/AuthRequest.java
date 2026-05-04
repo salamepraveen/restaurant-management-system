@@ -2,6 +2,7 @@ package com.prav.auth.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class AuthRequest {
@@ -10,10 +11,12 @@ public class AuthRequest {
     private String username;
 
     @NotBlank(message = "Password is required")
-    @Size(min = 4, message = "Password must be at least 4 characters") // must be spcial character verufy laterr all the verfication.
+    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}$", message = "Password must be at least 8 characters long, contain at least one digit, one lowercase letter, one uppercase letter, and one special character")
     private String password;
 
-    private String email; //make sure to use the regex pattern
+    @NotBlank(message = "Email is required")
+    @Pattern(regexp = "^[A-Za-z0-9+_.-]+@(.+)$", message = "Invalid email format")
+    private String email;
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
