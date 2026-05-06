@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Auth Service</a> &gt; <a href="index.source.html" class="el_package">com.prav.auth.service</a> &gt; <span class="el_source">AuthService.java</span></div><h1>AuthService.java</h1><pre class="source lang-java linenums">package com.prav.auth.service;
+
+import org.springframework.stereotype.Service;
+
+import com.prav.auth.client.UserClient;
+import com.prav.auth.dto.AuthRequest;
+import com.prav.auth.dto.AuthResponse;
+import com.prav.auth.dto.OtpLoginRequestDTO;
+import com.prav.auth.dto.OtpRequestDTO;
+import com.prav.auth.dto.OtpVerifyDTO;
+import com.prav.auth.dto.UserDTO;
+import com.prav.auth.exception.InvalidCredentialsException;
+import com.prav.auth.service.OtpService.SignupData;
+import com.prav.auth.util.JwtUtil;
+import com.prav.common.exception.ConflictException;
+import com.prav.common.exception.ResourceNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+@Service
+public class AuthService {
+
+    private final UserClient userClient;
+    private final JwtUtil jwtUtil;
+    private final OtpService otpService;
+    private final PasswordEncoder encoder;
+
+    @org.springframework.beans.factory.annotation.Value(&quot;${platform.admin.username:platformadmin}&quot;)
+    private String platformAdminUsername;
+
+    @org.springframework.beans.factory.annotation.Value(&quot;${platform.admin.password:Platform@123}&quot;)
+    private String platformAdminPassword;
+
+    @org.springframework.beans.factory.annotation.Value(&quot;${platform.admin.email:admin@platform.com}&quot;)
+    private String platformAdminEmail;
+
+<span class="fc" id="L36">    public AuthService(UserClient userClient, JwtUtil jwtUtil, OtpService otpService, PasswordEncoder encoder) {</span>
+<span class="fc" id="L37">        this.userClient = userClient;</span>
+<span class="fc" id="L38">        this.jwtUtil = jwtUtil;</span>
+<span class="fc" id="L39">        this.otpService = otpService;</span>
+<span class="fc" id="L40">        this.encoder = encoder;</span>
+<span class="fc" id="L41">    }</span>
+
+    //  SIGNUP - with OTP verification
+
+    public void requestSignupOtp(OtpRequestDTO req) {
+        // if username or email already exists
+        try {
+<span class="fc" id="L48">            userClient.getUserByUsername(req.getUsername());</span>
+<span class="fc" id="L49">            throw new ConflictException(&quot;Username already taken: &quot; + req.getUsername());</span>
+<span class="fc" id="L50">        } catch (ConflictException e) {</span>
+<span class="fc" id="L51">            throw e;</span>
+<span class="fc" id="L52">        } catch (Exception e) {</span>
+       
+<span class="pc bpc" id="L54" title="1 of 4 branches missed.">            if (e.getMessage() == null || !e.getMessage().contains(&quot;404&quot;)) {</span>
+<span class="fc" id="L55">                throw new RuntimeException(&quot;Error checking username: &quot; + e.getMessage(), e);</span>
+            }
+        }
+
+        // Generate and send OTP
+<span class="fc" id="L60">        otpService.generateSignupOtp(req.getEmail(), req.getUsername(), req.getPassword());</span>
+<span class="fc" id="L61">    }</span>
+
+    public AuthResponse verifySignupAndCreate(OtpVerifyDTO req) {
+        // Verify OTP and get pending signup data
+<span class="fc" id="L65">        SignupData signupData = otpService.verifySignupOtp(req.getEmail(), req.getOtp());</span>
+
+        // Creating user via user-service  --  thoda bahut fetch nhi ho rha
+<span class="fc" id="L68">        UserDTO user = new UserDTO();</span>
+<span class="fc" id="L69">        user.setUsername(signupData.getUsername());</span>
+<span class="fc" id="L70">        user.setPassword(encoder.encode(signupData.getPassword()));</span>
+<span class="fc" id="L71">        user.setEmail(signupData.getEmail());</span>
+<span class="fc" id="L72">        UserDTO createdUser = userClient.createUser(user);</span>
+
+        // Generate token
+<span class="fc" id="L75">        String token = jwtUtil.generateToken(createdUser);</span>
+
+<span class="fc" id="L77">        return buildAuthResponse(createdUser, token);</span>
+    }
+    
+    //  SIGNUP (Direct, without OTP) 
+    
+    public AuthResponse signupDirect(AuthRequest req) {
+    	//if username already exists
+        try {
+<span class="nc" id="L85">            userClient.getUserByUsername(req.getUsername());</span>
+<span class="nc" id="L86">            throw new ConflictException(&quot;Username already taken: &quot; + req.getUsername());</span>
+<span class="nc" id="L87">        } catch (ConflictException e) {</span>
+<span class="nc" id="L88">            throw e;</span>
+<span class="fc" id="L89">        } catch (Exception e) {</span>
+            // 404 
+<span class="pc bpc" id="L91" title="1 of 4 branches missed.">            if (e.getMessage() == null || !e.getMessage().contains(&quot;404&quot;)) {</span>
+<span class="fc" id="L92">                throw new RuntimeException(&quot;Error checking username: &quot; + e.getMessage(), e);</span>
+            }
+        }
+        
+        // Create user via user-service
+<span class="fc" id="L97">        UserDTO user = new UserDTO();</span>
+<span class="fc" id="L98">        user.setUsername(req.getUsername());</span>
+<span class="fc" id="L99">        user.setPassword(encoder.encode(req.getPassword()));</span>
+<span class="fc" id="L100">        user.setEmail(req.getEmail());</span>
+<span class="fc" id="L101">        UserDTO createdUser = userClient.createUser(user);</span>
+
+        // Generate token
+<span class="fc" id="L104">        String token = jwtUtil.generateToken(createdUser);</span>
+
+<span class="fc" id="L106">        return buildAuthResponse(createdUser, token);</span>
+    }
+
+    //  SIGNIN — Username + Password 
+
+    public AuthResponse signin(AuthRequest req) {
+        // Check for Platform Admin credentials
+<span class="pc bpc" id="L113" title="1 of 4 branches missed.">        if (req.getUsername().equals(platformAdminUsername) &amp;&amp; req.getPassword().equals(platformAdminPassword)) {</span>
+<span class="fc" id="L114">            UserDTO platformAdmin = new UserDTO();</span>
+<span class="fc" id="L115">            platformAdmin.setId(0L); // special ID for platform admin</span>
+<span class="fc" id="L116">            platformAdmin.setUsername(platformAdminUsername);</span>
+<span class="fc" id="L117">            platformAdmin.setEmail(platformAdminEmail);</span>
+<span class="fc" id="L118">            platformAdmin.setRole(&quot;PLATFORM_ADMIN&quot;);</span>
+<span class="fc" id="L119">            String token = jwtUtil.generateToken(platformAdmin);</span>
+<span class="fc" id="L120">            return buildAuthResponse(platformAdmin, token);</span>
+        }
+
+        UserDTO user;
+        try {
+<span class="fc" id="L125">            user = userClient.getUserByUsername(req.getUsername());</span>
+<span class="fc" id="L126">        } catch (Exception e) {</span>
+<span class="fc" id="L127">            throw new InvalidCredentialsException(&quot;Invalid credentials&quot;);</span>
+<span class="fc" id="L128">        }</span>
+
+<span class="fc bfc" id="L130" title="All 2 branches covered.">        if (user.isBanned()) {</span>
+<span class="fc" id="L131">            throw new com.prav.auth.exception.InvalidCredentialsException(&quot;Your account has been banned by the platform administrator.&quot;);</span>
+        }
+
+<span class="fc bfc" id="L134" title="All 2 branches covered.">        if (!encoder.matches(req.getPassword(), user.getPassword())) {</span>
+<span class="fc" id="L135">            throw new InvalidCredentialsException(&quot;Invalid credentials&quot;);</span>
+        }
+
+<span class="fc" id="L138">        String token = jwtUtil.generateToken(user);</span>
+<span class="fc" id="L139">        return buildAuthResponse(user, token);</span>
+    }
+
+    //  SIGNIN — OTP Login 
+
+    public void requestLoginOtp(OtpLoginRequestDTO req) {
+        // Check if user exists and get their email
+        UserDTO user;
+        try {
+<span class="fc" id="L148">            user = userClient.getUserByUsername(req.getUsername());</span>
+<span class="fc" id="L149">        } catch (Exception e) {</span>
+<span class="fc" id="L150">            throw new ResourceNotFoundException(&quot;User&quot;, &quot;username&quot;, req.getUsername());</span>
+<span class="fc" id="L151">        }</span>
+
+<span class="pc bpc" id="L153" title="1 of 4 branches missed.">        if (user.getEmail() == null || user.getEmail().isEmpty()) {</span>
+<span class="fc" id="L154">            throw new RuntimeException(&quot;No email associated with this account. Use password login.&quot;);</span>
+        }
+
+        // Generate and send OTP
+<span class="fc" id="L158">        otpService.generateLoginOtp(user.getEmail());</span>
+<span class="fc" id="L159">    }</span>
+
+    public AuthResponse verifyLoginOtp(OtpVerifyDTO req) {
+        // Verify OTP
+<span class="fc" id="L163">        otpService.verifyLoginOtp(req.getEmail(), req.getOtp());</span>
+
+        UserDTO user;
+        try {
+<span class="fc" id="L167">             user = userClient.getUserByEmail(req.getEmail());</span>
+<span class="fc" id="L168">        } catch (Exception e) {</span>
+<span class="fc" id="L169">             throw new InvalidCredentialsException(&quot;Invalid credentials&quot;);</span>
+<span class="fc" id="L170">        }</span>
+
+<span class="fc bfc" id="L172" title="All 2 branches covered.">        if (user.isBanned()) {</span>
+<span class="fc" id="L173">            throw new com.prav.auth.exception.InvalidCredentialsException(&quot;Your account has been banned by the platform administrator.&quot;);</span>
+        }
+<span class="fc" id="L175">        String token = jwtUtil.generateToken(user);</span>
+<span class="fc" id="L176">        return buildAuthResponse(user, token);</span>
+    }
+
+    //  HELPERS 
+
+    private AuthResponse buildAuthResponse(UserDTO user, String token) {
+<span class="fc" id="L182">        AuthResponse response = new AuthResponse();</span>
+<span class="fc" id="L183">        response.setUserId(user.getId());</span>
+<span class="fc" id="L184">        response.setUsername(user.getUsername());</span>
+<span class="fc" id="L185">        response.setEmail(user.getEmail()); </span>
+<span class="fc" id="L186">        response.setToken(token);</span>
+<span class="fc" id="L187">        response.setRole(user.getRole());</span>
+<span class="fc" id="L188">        response.setAssignedRestaurantId(user.getAssignedRestaurantId());</span>
+<span class="fc" id="L189">        response.setKnownRestaurantIds(user.getKnownRestaurantIds());</span>
+<span class="fc" id="L190">        return response;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

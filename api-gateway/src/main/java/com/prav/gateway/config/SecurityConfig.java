@@ -13,6 +13,8 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
+    private static final String ROLE_PLATFORM_ADMIN = "PLATFORM_ADMIN";
+
     private final JwtFilter2 jwtFilter;
 
     public SecurityConfig(JwtFilter2 jwtFilter) {
@@ -41,6 +43,10 @@ public class SecurityConfig {
                         .pathMatchers("/pizzas/toppings").hasRole("ADMIN")
                         .pathMatchers("/orders/reports/**").hasAnyRole("ADMIN", "STAFF")
                         .pathMatchers("/orders/**").authenticated()
+                        .pathMatchers(HttpMethod.GET, "/users/all").hasRole(ROLE_PLATFORM_ADMIN)
+                        .pathMatchers(HttpMethod.GET, "/users/admin/restaurants").hasRole(ROLE_PLATFORM_ADMIN)
+                        .pathMatchers(HttpMethod.PUT, "/users/ban/**").hasRole(ROLE_PLATFORM_ADMIN)
+                        .pathMatchers(HttpMethod.PUT, "/users/restaurant/ban/**").hasRole(ROLE_PLATFORM_ADMIN)
                         .pathMatchers("/users/**").authenticated()
                         .anyExchange().permitAll()
                 )

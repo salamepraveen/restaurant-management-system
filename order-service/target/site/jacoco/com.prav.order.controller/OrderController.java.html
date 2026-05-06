@@ -29,7 +29,7 @@ public class OrderController {
 <span class="fc" id="L29">        this.reportService = reportService;</span>
 <span class="fc" id="L30">    }</span>
 
-    // ==================== ORDER CRUD ====================
+    //  ORDER CRUD 
 
     @PostMapping
     public ResponseEntity&lt;ApiResponse&lt;OrderResponseDTO&gt;&gt; placeOrder(
@@ -122,7 +122,7 @@ public class OrderController {
 <span class="fc" id="L122">                        .build());</span>
     }
 
-    // ==================== PAYMENT ====================
+    //  PAYMENT 
 
     @PostMapping(&quot;/{id}/payment/create&quot;)
     public ResponseEntity&lt;ApiResponse&lt;PaymentOrderResponseDTO&gt;&gt; createPaymentOrder(@PathVariable Long id) {
@@ -148,7 +148,7 @@ public class OrderController {
 <span class="fc" id="L148">                        .build());</span>
     }
 
-    // ==================== CANCEL ====================
+    //  CANCEL 
 
     @PostMapping(&quot;/{id}/cancel&quot;)
     public ResponseEntity&lt;ApiResponse&lt;OrderResponseDTO&gt;&gt; cancelOrder(
@@ -164,7 +164,7 @@ public class OrderController {
 <span class="fc" id="L164">                        .build());</span>
     }
 
-    // ==================== REPORTS ====================
+    //  REPORTS 
 
     @GetMapping(&quot;/reports/revenue&quot;)
     public ResponseEntity&lt;ApiResponse&lt;Map&lt;String, Object&gt;&gt;&gt; getRevenue(

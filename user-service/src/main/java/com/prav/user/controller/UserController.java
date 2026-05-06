@@ -28,6 +28,8 @@ import jakarta.validation.Valid;
 @RequestMapping("/users")
 public class UserController {
 
+    private static final String ROLE_PLATFORM_ADMIN = "PLATFORM_ADMIN";
+
     private final UserService service;
     private final UserRepository userRepo;
     private final RestaurantRepository restaurantRepo;
@@ -265,6 +267,86 @@ public class UserController {
                         .build());
     }
 
+    // PLATFORM ADMIN — Get All Users
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse<List<UserDTO>>> getAllUsers(
+            @RequestHeader("X-User-Role") String role) {
+        
+        if (!ROLE_PLATFORM_ADMIN.equals(role)) {
+            throw new AccessDeniedException("Platform Admin privileges required");
+        }
+        
+        List<UserDTO> users = service.getAllUsers().stream()
+                .map(this::convertToDTO)
+                .toList();
+                
+        return ResponseEntity.ok(
+                ApiResponse.<List<UserDTO>>builder()
+                        .success(true)
+                        .message("All users retrieved successfully")
+                        .data(users)
+                        .build());
+    }
+
+    // PLATFORM ADMIN — Get All Restaurants
+    @GetMapping("/admin/restaurants")
+    public ResponseEntity<ApiResponse<List<Restaurant>>> getAllAdminRestaurants(
+            @RequestHeader("X-User-Role") String role) {
+        
+        if (!ROLE_PLATFORM_ADMIN.equals(role)) {
+            throw new AccessDeniedException("Platform Admin privileges required");
+        }
+        
+        List<Restaurant> restaurants = service.getAllPublicRestaurants();
+        
+        return ResponseEntity.ok(
+                ApiResponse.<List<Restaurant>>builder()
+                        .success(true)
+                        .message("All restaurants retrieved successfully")
+                        .data(restaurants)
+                        .build());
+    }
+
+    // PLATFORM ADMIN — Ban/Unban User
+    @PutMapping("/ban/{userId}")
+    public ResponseEntity<ApiResponse<UserDTO>> toggleBanUser(
+            @PathVariable Long userId,
+            @RequestHeader("X-User-Role") String role) {
+        
+        if (!ROLE_PLATFORM_ADMIN.equals(role)) {
+            throw new AccessDeniedException("Platform Admin privileges required");
+        }
+        
+        User user = service.toggleBanUser(userId);
+        
+        return ResponseEntity.ok(
+                ApiResponse.<UserDTO>builder()
+                        .success(true)
+                        .message("User ban status toggled successfully")
+                        .data(convertToDTO(user))
+                        .build());
+    }
+
+    // PLATFORM ADMIN — Ban/Unban Restaurant
+    @PutMapping("/restaurant/ban/{restaurantId}")
+    public ResponseEntity<ApiResponse<Restaurant>> toggleBanRestaurant(
+            @PathVariable Long restaurantId,
+            @RequestHeader("X-User-Role") String role) {
+        
+        if (!ROLE_PLATFORM_ADMIN.equals(role)) {
+            throw new AccessDeniedException("Platform Admin privileges required");
+        }
+        
+        Restaurant restaurant = service.toggleBanRestaurant(restaurantId);
+        
+        return ResponseEntity.ok(
+                ApiResponse.<Restaurant>builder()
+                        .success(true)
+                        .message("Restaurant ban status toggled successfully")
+                        .data(restaurant)
+                        .build());
+    }
+
     //  Helper 
 
     private UserDTO convertToDTO(User user) {
@@ -278,6 +360,7 @@ public class UserController {
         dto.setKnownRestaurantIds(user.getKnownRestaurantIds());
         dto.setPhoneNumber(user.getPhoneNumber());
         dto.setAddress(user.getAddress());
+        dto.setBanned(user.isBanned());
         return dto;
     }
 }

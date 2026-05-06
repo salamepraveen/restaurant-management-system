@@ -28,7 +28,7 @@ public class PizzaController {
 <span class="fc" id="L28">    }</span>
     
     
- // ==================== INTERNAL — For Feign calls from other services ====================
+ //  INTERNAL — For Feign calls from other services 
 
     @GetMapping(&quot;/internal/{id}&quot;)
     public Map&lt;String, Object&gt; getPizzaInternal(@PathVariable Long id) {
@@ -45,7 +45,7 @@ public class PizzaController {
 <span class="nc" id="L45">        return result;</span>
     }
 
-    // ==================== ADMIN — Manage Pizzas ====================
+    //  ADMIN — Manage Pizzas 
 
     @PostMapping
     public ResponseEntity&lt;ApiResponse&lt;PizzaDTO&gt;&gt; createPizza(
@@ -105,7 +105,7 @@ public class PizzaController {
 <span class="fc" id="L105">                        .build());</span>
     }
 
-    // ==================== EVERYONE — Browse Menu ====================
+    //  EVERYONE — Browse Menu 
 
     @GetMapping
     public ResponseEntity&lt;ApiResponse&lt;List&lt;PizzaDTO&gt;&gt;&gt; getAllPizzas() {
@@ -158,7 +158,7 @@ public class PizzaController {
 <span class="fc" id="L158">                        .build());</span>
     }
 
-    // ==================== ADMIN — Manage Sizes ====================
+    //  ADMIN — Manage Sizes 
 
     @PostMapping(&quot;/{id}/sizes&quot;)
     public ResponseEntity&lt;ApiResponse&lt;PizzaSizeDTO&gt;&gt; addSize(
@@ -180,7 +180,7 @@ public class PizzaController {
 <span class="fc" id="L180">                        .build());</span>
     }
 
-    // ==================== ADMIN — Manage Toppings ====================
+    //  ADMIN — Manage Toppings 
 
     @PostMapping(&quot;/toppings&quot;)
     public ResponseEntity&lt;ApiResponse&lt;ToppingDTO&gt;&gt; createTopping(

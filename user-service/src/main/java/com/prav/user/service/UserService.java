@@ -113,4 +113,22 @@ public class UserService {
         restaurantRepo.findAll().forEach(r -> ids.add(r.getId()));
         return ids;
     }
+
+    public List<User> getAllUsers() {
+        return userRepo.findAll();
+    }
+
+    public User toggleBanUser(Long userId) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setBanned(!user.isBanned());
+        return userRepo.save(user);
+    }
+
+    public Restaurant toggleBanRestaurant(Long restaurantId) {
+        Restaurant restaurant = restaurantRepo.findById(restaurantId)
+                .orElseThrow(() -> new RuntimeException("Restaurant not found"));
+        restaurant.setBanned(!restaurant.isBanned());
+        return restaurantRepo.save(restaurant);
+    }
 }

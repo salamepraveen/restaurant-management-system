@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.prav.user.dto.ProfileUpdateRequestDTO;
 import com.prav.user.dto.PromoteRequestDTO;
 import com.prav.user.dto.RestaurantCreateRequestDTO;
 import com.prav.user.dto.UserDTO;
@@ -27,56 +28,71 @@ import jakarta.validation.Valid;
 @RequestMapping(&quot;/users&quot;)
 public class UserController {
 
+    private static final String ROLE_PLATFORM_ADMIN = &quot;PLATFORM_ADMIN&quot;;
+
     private final UserService service;
     private final UserRepository userRepo;
     private final RestaurantRepository restaurantRepo;
 
-<span class="fc" id="L34">    public UserController(UserService service, UserRepository userRepo, RestaurantRepository restaurantRepo) {</span>
-<span class="fc" id="L35">        this.service = service;</span>
-<span class="fc" id="L36">        this.userRepo = userRepo;</span>
-<span class="fc" id="L37">        this.restaurantRepo = restaurantRepo;</span>
-<span class="fc" id="L38">    }</span>
+<span class="fc" id="L37">    public UserController(UserService service, UserRepository userRepo, RestaurantRepository restaurantRepo) {</span>
+<span class="fc" id="L38">        this.service = service;</span>
+<span class="fc" id="L39">        this.userRepo = userRepo;</span>
+<span class="fc" id="L40">        this.restaurantRepo = restaurantRepo;</span>
+<span class="fc" id="L41">    }</span>
 
-    // ==================== Internal (Feign) — Plain DTO, No ApiResponse ====================
+    // Internal (Feign) — Plain DTO, No ApiResponse
 
     @PostMapping(&quot;/internal&quot;)
     public UserDTO createUser(@Valid @RequestBody UserDTO request) {
         
-<span class="pc bpc" id="L45" title="1 of 2 branches missed.">        if (userRepo.findFirstByUsername(request.getUsername()).isPresent()) {</span>
-<span class="nc" id="L46">            throw new RuntimeException(&quot;User already exists with username: &quot; + request.getUsername());</span>
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">        if (userRepo.findFirstByUsername(request.getUsername()).isPresent()) {</span>
+<span class="nc" id="L49">            throw new RuntimeException(&quot;User already exists with username: &quot; + request.getUsername());</span>
         }
         
-<span class="fc" id="L49">        User user = new User();</span>
-<span class="fc" id="L50">        user.setUsername(request.getUsername());</span>
-<span class="fc" id="L51">        user.setPassword(request.getPassword());</span>
-<span class="fc" id="L52">        user.setEmail(request.getEmail());</span>
-<span class="fc" id="L53">        User savedUser = service.createUser(user);</span>
+<span class="fc" id="L52">        User user = new User();</span>
+<span class="fc" id="L53">        user.setUsername(request.getUsername());</span>
+<span class="fc" id="L54">        user.setPassword(request.getPassword());</span>
+<span class="fc" id="L55">        user.setEmail(request.getEmail());</span>
+<span class="fc" id="L56">        User savedUser = service.createUser(user);</span>
         
-<span class="fc" id="L55">        return convertToDTO(savedUser);</span>
+<span class="fc" id="L58">        return convertToDTO(savedUser);</span>
     }
 
     @GetMapping(&quot;/username/{username}&quot;)
     public UserDTO getByUsername(@PathVariable String username) {
-<span class="fc" id="L60">        User user = userRepo.findFirstByUsername(username)</span>
-<span class="fc" id="L61">                .orElseThrow(() -&gt; new UserNotFoundException(&quot;username&quot;, username));</span>
-<span class="fc" id="L62">        return convertToDTO(user);</span>
+<span class="fc" id="L63">        User user = userRepo.findFirstByUsername(username)</span>
+<span class="fc" id="L64">                .orElseThrow(() -&gt; new UserNotFoundException(&quot;username&quot;, username));</span>
+<span class="fc" id="L65">        return convertToDTO(user);</span>
     }
 
     @GetMapping(&quot;/email/{email}&quot;)
     public UserDTO getByEmail(@PathVariable String email) {
-<span class="nc" id="L67">        User user = userRepo.findByEmail(email)</span>
-<span class="nc" id="L68">                .orElseThrow(() -&gt; new UserNotFoundException(&quot;email&quot;, email));</span>
-<span class="nc" id="L69">        return convertToDTO(user);</span>
+<span class="nc" id="L70">        User user = userRepo.findByEmail(email)</span>
+<span class="nc" id="L71">                .orElseThrow(() -&gt; new UserNotFoundException(&quot;email&quot;, email));</span>
+<span class="nc" id="L72">        return convertToDTO(user);</span>
     }
 
     @GetMapping(&quot;/internal/{id}&quot;)
     public UserDTO getUserById(@PathVariable Long id) {
-<span class="fc" id="L74">        User user = userRepo.findById(id)</span>
-<span class="fc" id="L75">                .orElseThrow(() -&gt; new UserNotFoundException(id));</span>
-<span class="fc" id="L76">        return convertToDTO(user);</span>
+<span class="fc" id="L77">        User user = userRepo.findById(id)</span>
+<span class="fc" id="L78">                .orElseThrow(() -&gt; new UserNotFoundException(id));</span>
+<span class="fc" id="L79">        return convertToDTO(user);</span>
     }
 
-    // ==================== USER — Create Restaurant ====================
+    //PUBLIC — Get All Restaurants 
+
+    @GetMapping(&quot;/public/restaurants&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;List&lt;Restaurant&gt;&gt;&gt; getAllPublicRestaurants() {
+<span class="nc" id="L86">        List&lt;Restaurant&gt; restaurants = service.getAllPublicRestaurants();</span>
+<span class="nc" id="L87">        return ResponseEntity.ok(</span>
+<span class="nc" id="L88">                ApiResponse.&lt;List&lt;Restaurant&gt;&gt;builder()</span>
+<span class="nc" id="L89">                        .success(true)</span>
+<span class="nc" id="L90">                        .message(&quot;Public restaurants retrieved successfully&quot;)</span>
+<span class="nc" id="L91">                        .data(restaurants)</span>
+<span class="nc" id="L92">                        .build());</span>
+    }
+
+    // USER — Create Restaurant 
 
     @PostMapping(&quot;/restaurant&quot;)
     public ResponseEntity&lt;ApiResponse&lt;Map&lt;String, Object&gt;&gt;&gt; createRestaurant(
@@ -84,87 +100,87 @@ public class UserController {
             @RequestHeader(&quot;X-User-Role&quot;) String role,
             @Valid @RequestBody RestaurantCreateRequestDTO request) {
 
-<span class="fc bfc" id="L87" title="All 2 branches covered.">        if (!&quot;USER&quot;.equals(role)) {</span>
-<span class="fc" id="L88">            throw new AccessDeniedException(&quot;Only USER can create a restaurant&quot;);</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">        if (!&quot;USER&quot;.equals(role)) {</span>
+<span class="fc" id="L104">            throw new AccessDeniedException(&quot;Only USER can create a restaurant&quot;);</span>
         }
 
-<span class="fc" id="L91">        User user = userRepo.findById(userId)</span>
-<span class="fc" id="L92">                .orElseThrow(() -&gt; new UserNotFoundException(userId));</span>
+<span class="fc" id="L107">        User user = userRepo.findById(userId)</span>
+<span class="fc" id="L108">                .orElseThrow(() -&gt; new UserNotFoundException(userId));</span>
 
-<span class="fc" id="L94">        Restaurant restaurant = new Restaurant();</span>
-<span class="fc" id="L95">        restaurant.setName(request.getName());</span>
-<span class="fc" id="L96">        restaurant.setCity(request.getCity());</span>
-<span class="fc" id="L97">        restaurant.setAddress(request.getAddress());</span>
-<span class="fc" id="L98">        restaurant.setOwnerId(userId);</span>
-<span class="fc" id="L99">        Restaurant saved = restaurantRepo.save(restaurant);</span>
+<span class="fc" id="L110">        Restaurant restaurant = new Restaurant();</span>
+<span class="fc" id="L111">        restaurant.setName(request.getName());</span>
+<span class="fc" id="L112">        restaurant.setCity(request.getCity());</span>
+<span class="fc" id="L113">        restaurant.setAddress(request.getAddress());</span>
+<span class="fc" id="L114">        restaurant.setOwnerId(userId);</span>
+<span class="fc" id="L115">        Restaurant saved = restaurantRepo.save(restaurant);</span>
 
-<span class="fc" id="L101">        user.setRole(&quot;ADMIN&quot;);</span>
-<span class="fc" id="L102">        user.setAssignedRestaurantId(saved.getId());</span>
-<span class="fc" id="L103">        user.getKnownRestaurantIds().clear();</span>
-<span class="fc" id="L104">        user.getKnownRestaurantIds().add(saved.getId());</span>
-<span class="fc" id="L105">        userRepo.save(user);</span>
+<span class="fc" id="L117">        user.setRole(&quot;ADMIN&quot;);</span>
+<span class="fc" id="L118">        user.setAssignedRestaurantId(saved.getId());</span>
+<span class="fc" id="L119">        user.getKnownRestaurantIds().clear();</span>
+<span class="fc" id="L120">        user.getKnownRestaurantIds().add(saved.getId());</span>
+<span class="fc" id="L121">        userRepo.save(user);</span>
 
-<span class="fc" id="L107">        service.notifyNewRestaurant(saved.getId());</span>
+<span class="fc" id="L123">        service.notifyNewRestaurant(saved.getId());</span>
 
-<span class="fc" id="L109">        Map&lt;String, Object&gt; data = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L110">        data.put(&quot;restaurantId&quot;, saved.getId());</span>
-<span class="fc" id="L111">        data.put(&quot;role&quot;, &quot;ADMIN&quot;);</span>
+<span class="fc" id="L125">        Map&lt;String, Object&gt; data = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L126">        data.put(&quot;restaurantId&quot;, saved.getId());</span>
+<span class="fc" id="L127">        data.put(&quot;role&quot;, &quot;ADMIN&quot;);</span>
 
-<span class="fc" id="L113">        return ResponseEntity.ok(</span>
-<span class="fc" id="L114">                ApiResponse.&lt;Map&lt;String, Object&gt;&gt;builder()</span>
-<span class="fc" id="L115">                        .success(true)</span>
-<span class="fc" id="L116">                        .message(&quot;Restaurant created successfully&quot;)</span>
-<span class="fc" id="L117">                        .data(data)</span>
-<span class="fc" id="L118">                        .build());</span>
+<span class="fc" id="L129">        return ResponseEntity.ok(</span>
+<span class="fc" id="L130">                ApiResponse.&lt;Map&lt;String, Object&gt;&gt;builder()</span>
+<span class="fc" id="L131">                        .success(true)</span>
+<span class="fc" id="L132">                        .message(&quot;Restaurant created successfully&quot;)</span>
+<span class="fc" id="L133">                        .data(data)</span>
+<span class="fc" id="L134">                        .build());</span>
     }
 
-    // ==================== USER — Get My Restaurants ====================
+    // USER — Get My Restaurants 
 
     @GetMapping(&quot;/restaurants&quot;)
     public ResponseEntity&lt;ApiResponse&lt;Map&lt;String, Object&gt;&gt;&gt; getMyRestaurants(
             @RequestHeader(&quot;X-User-Id&quot;) Long userId) {
 
-<span class="fc" id="L127">        User user = userRepo.findById(userId)</span>
-<span class="fc" id="L128">                .orElseThrow(() -&gt; new UserNotFoundException(userId));</span>
+<span class="fc" id="L143">        User user = userRepo.findById(userId)</span>
+<span class="fc" id="L144">                .orElseThrow(() -&gt; new UserNotFoundException(userId));</span>
 
-<span class="fc" id="L130">        Map&lt;String, Object&gt; data = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L131">        data.put(&quot;role&quot;, user.getRole());</span>
-<span class="fc" id="L132">        data.put(&quot;assignedRestaurantId&quot;, user.getAssignedRestaurantId());</span>
-<span class="fc" id="L133">        data.put(&quot;knownRestaurantIds&quot;, user.getKnownRestaurantIds());</span>
+<span class="fc" id="L146">        Map&lt;String, Object&gt; data = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L147">        data.put(&quot;role&quot;, user.getRole());</span>
+<span class="fc" id="L148">        data.put(&quot;assignedRestaurantId&quot;, user.getAssignedRestaurantId());</span>
+<span class="fc" id="L149">        data.put(&quot;knownRestaurantIds&quot;, user.getKnownRestaurantIds());</span>
 
-<span class="fc" id="L135">        return ResponseEntity.ok(</span>
-<span class="fc" id="L136">                ApiResponse.&lt;Map&lt;String, Object&gt;&gt;builder()</span>
-<span class="fc" id="L137">                        .success(true)</span>
-<span class="fc" id="L138">                        .message(&quot;User restaurant info retrieved successfully&quot;)</span>
-<span class="fc" id="L139">                        .data(data)</span>
-<span class="fc" id="L140">                        .build());</span>
+<span class="fc" id="L151">        return ResponseEntity.ok(</span>
+<span class="fc" id="L152">                ApiResponse.&lt;Map&lt;String, Object&gt;&gt;builder()</span>
+<span class="fc" id="L153">                        .success(true)</span>
+<span class="fc" id="L154">                        .message(&quot;User restaurant info retrieved successfully&quot;)</span>
+<span class="fc" id="L155">                        .data(data)</span>
+<span class="fc" id="L156">                        .build());</span>
     }
 
-    // ==================== ADMIN — Get Restaurant Users ====================
+    //  ADMIN — Get Restaurant Users 
 
     @GetMapping(&quot;/restaurant/users&quot;)
     public ResponseEntity&lt;ApiResponse&lt;List&lt;User&gt;&gt;&gt; getUsers(
             @RequestHeader(&quot;X-User-Id&quot;) Long userId,
             @RequestHeader(&quot;X-Restaurant-Id&quot;) Long restaurantId) {
 
-<span class="fc" id="L150">        User requestor = userRepo.findById(userId)</span>
-<span class="fc" id="L151">                .orElseThrow(() -&gt; new UserNotFoundException(userId));</span>
+<span class="fc" id="L166">        User requestor = userRepo.findById(userId)</span>
+<span class="fc" id="L167">                .orElseThrow(() -&gt; new UserNotFoundException(userId));</span>
 
-<span class="fc" id="L153">        Long targetRestaurantId = requestor.getAssignedRestaurantId();</span>
-<span class="fc bfc" id="L154" title="All 4 branches covered.">        if (targetRestaurantId == null || !targetRestaurantId.equals(restaurantId)) {</span>
-<span class="fc" id="L155">            throw new AccessDeniedException(&quot;Access Denied: You do not manage this restaurant&quot;);</span>
+<span class="fc" id="L169">        Long targetRestaurantId = requestor.getAssignedRestaurantId();</span>
+<span class="fc bfc" id="L170" title="All 4 branches covered.">        if (targetRestaurantId == null || !targetRestaurantId.equals(restaurantId)) {</span>
+<span class="fc" id="L171">            throw new AccessDeniedException(&quot;Access Denied: You do not manage this restaurant&quot;);</span>
         }
 
-<span class="fc" id="L158">        List&lt;User&gt; users = userRepo.findByAssignedRestaurantIdOrAssignedRestaurantIdIsNull(restaurantId);</span>
-<span class="fc" id="L159">        return ResponseEntity.ok(</span>
-<span class="fc" id="L160">                ApiResponse.&lt;List&lt;User&gt;&gt;builder()</span>
-<span class="fc" id="L161">                        .success(true)</span>
-<span class="fc" id="L162">                        .message(&quot;Restaurant users retrieved successfully&quot;)</span>
-<span class="fc" id="L163">                        .data(users)</span>
-<span class="fc" id="L164">                        .build());</span>
+<span class="fc" id="L174">        List&lt;User&gt; users = userRepo.findByAssignedRestaurantIdOrAssignedRestaurantIdIsNull(restaurantId);</span>
+<span class="fc" id="L175">        return ResponseEntity.ok(</span>
+<span class="fc" id="L176">                ApiResponse.&lt;List&lt;User&gt;&gt;builder()</span>
+<span class="fc" id="L177">                        .success(true)</span>
+<span class="fc" id="L178">                        .message(&quot;Restaurant users retrieved successfully&quot;)</span>
+<span class="fc" id="L179">                        .data(users)</span>
+<span class="fc" id="L180">                        .build());</span>
     }
 
-    // ==================== ADMIN — Promote User ====================
+    //  ADMIN — Promote User 
 
     @PutMapping(&quot;/promote/{userId}&quot;)
     public ResponseEntity&lt;ApiResponse&lt;Map&lt;String, String&gt;&gt;&gt; promote(
@@ -174,25 +190,25 @@ public class UserController {
             @RequestHeader(&quot;X-Restaurant-Id&quot;) Long adminRestaurantId,
             @Valid @RequestBody PromoteRequestDTO request) {
 
-<span class="fc bfc" id="L177" title="All 2 branches covered.">        if (!&quot;ADMIN&quot;.equals(adminRole)) {</span>
-<span class="fc" id="L178">            throw new AccessDeniedException(&quot;Admin privileges required&quot;);</span>
+<span class="fc bfc" id="L193" title="All 2 branches covered.">        if (!&quot;ADMIN&quot;.equals(adminRole)) {</span>
+<span class="fc" id="L194">            throw new AccessDeniedException(&quot;Admin privileges required&quot;);</span>
         }
 
-<span class="fc" id="L181">        User promoted = service.promoteUser(userId, adminRestaurantId, request.getRole());</span>
+<span class="fc" id="L197">        User promoted = service.promoteUser(userId, adminRestaurantId, request.getRole());</span>
 
-<span class="fc" id="L183">        Map&lt;String, String&gt; data = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L184">        data.put(&quot;username&quot;, promoted.getUsername());</span>
-<span class="fc" id="L185">        data.put(&quot;newRole&quot;, promoted.getRole());</span>
+<span class="fc" id="L199">        Map&lt;String, String&gt; data = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L200">        data.put(&quot;username&quot;, promoted.getUsername());</span>
+<span class="fc" id="L201">        data.put(&quot;newRole&quot;, promoted.getRole());</span>
 
-<span class="fc" id="L187">        return ResponseEntity.ok(</span>
-<span class="fc" id="L188">                ApiResponse.&lt;Map&lt;String, String&gt;&gt;builder()</span>
-<span class="fc" id="L189">                        .success(true)</span>
-<span class="fc" id="L190">                        .message(promoted.getUsername() + &quot; is now &quot; + request.getRole().toUpperCase())</span>
-<span class="fc" id="L191">                        .data(data)</span>
-<span class="fc" id="L192">                        .build());</span>
+<span class="fc" id="L203">        return ResponseEntity.ok(</span>
+<span class="fc" id="L204">                ApiResponse.&lt;Map&lt;String, String&gt;&gt;builder()</span>
+<span class="fc" id="L205">                        .success(true)</span>
+<span class="fc" id="L206">                        .message(promoted.getUsername() + &quot; is now &quot; + request.getRole().toUpperCase())</span>
+<span class="fc" id="L207">                        .data(data)</span>
+<span class="fc" id="L208">                        .build());</span>
     }
 
-    // ==================== ADMIN — Demote User ====================
+    //  ADMIN — Demote User 
 
     @PutMapping(&quot;/demote/{userId}&quot;)
     public ResponseEntity&lt;ApiResponse&lt;Map&lt;String, String&gt;&gt;&gt; demote(
@@ -201,54 +217,151 @@ public class UserController {
             @RequestHeader(&quot;X-User-Role&quot;) String adminRole,
             @RequestHeader(&quot;X-Restaurant-Id&quot;) Long adminRestaurantId) {
 
-<span class="fc bfc" id="L204" title="All 2 branches covered.">        if (!&quot;ADMIN&quot;.equals(adminRole)) {</span>
-<span class="fc" id="L205">            throw new AccessDeniedException(&quot;Admin privileges required&quot;);</span>
+<span class="fc bfc" id="L220" title="All 2 branches covered.">        if (!&quot;ADMIN&quot;.equals(adminRole)) {</span>
+<span class="fc" id="L221">            throw new AccessDeniedException(&quot;Admin privileges required&quot;);</span>
         }
 
-<span class="fc" id="L208">        User demoted = service.demoteToUser(userId);</span>
+<span class="fc" id="L224">        User demoted = service.demoteToUser(userId);</span>
 
-<span class="fc" id="L210">        Map&lt;String, String&gt; data = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L211">        data.put(&quot;username&quot;, demoted.getUsername());</span>
-<span class="fc" id="L212">        data.put(&quot;newRole&quot;, &quot;USER&quot;);</span>
+<span class="fc" id="L226">        Map&lt;String, String&gt; data = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L227">        data.put(&quot;username&quot;, demoted.getUsername());</span>
+<span class="fc" id="L228">        data.put(&quot;newRole&quot;, &quot;USER&quot;);</span>
 
-<span class="fc" id="L214">        return ResponseEntity.ok(</span>
-<span class="fc" id="L215">                ApiResponse.&lt;Map&lt;String, String&gt;&gt;builder()</span>
-<span class="fc" id="L216">                        .success(true)</span>
-<span class="fc" id="L217">                        .message(demoted.getUsername() + &quot; is now USER&quot;)</span>
-<span class="fc" id="L218">                        .data(data)</span>
-<span class="fc" id="L219">                        .build());</span>
+<span class="fc" id="L230">        return ResponseEntity.ok(</span>
+<span class="fc" id="L231">                ApiResponse.&lt;Map&lt;String, String&gt;&gt;builder()</span>
+<span class="fc" id="L232">                        .success(true)</span>
+<span class="fc" id="L233">                        .message(demoted.getUsername() + &quot; is now USER&quot;)</span>
+<span class="fc" id="L234">                        .data(data)</span>
+<span class="fc" id="L235">                        .build());</span>
     }
 
-    // ==================== USER — Update Profile ====================
+    //  USER — Get Profile 
+    @GetMapping(&quot;/profile&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;UserDTO&gt;&gt; getProfile(
+            @RequestHeader(&quot;X-User-Id&quot;) Long userId) {
+        
+<span class="nc" id="L243">        User user = userRepo.findById(userId)</span>
+<span class="nc" id="L244">                .orElseThrow(() -&gt; new UserNotFoundException(userId));</span>
+        
+<span class="nc" id="L246">        return ResponseEntity.ok(</span>
+<span class="nc" id="L247">                ApiResponse.&lt;UserDTO&gt;builder()</span>
+<span class="nc" id="L248">                        .success(true)</span>
+<span class="nc" id="L249">                        .message(&quot;Profile retrieved successfully&quot;)</span>
+<span class="nc" id="L250">                        .data(convertToDTO(user))</span>
+<span class="nc" id="L251">                        .build());</span>
+    }
+
+    //  USER — Update Profile 
     @PutMapping(&quot;/profile&quot;)
     public ResponseEntity&lt;ApiResponse&lt;UserDTO&gt;&gt; updateProfile(
             @RequestHeader(&quot;X-User-Id&quot;) Long userId,
-            @RequestBody UserDTO request) {
+            @Valid @RequestBody ProfileUpdateRequestDTO request) {
         
-<span class="nc" id="L228">        User updatedUser = service.updateProfile(userId, request.getEmail(), request.getPhoneNumber(), request.getAddress());</span>
+<span class="fc" id="L260">        User updatedUser = service.updateProfile(userId, request.getEmail(), request.getPhoneNumber(), request.getAddress());</span>
         
-<span class="nc" id="L230">        return ResponseEntity.ok(</span>
-<span class="nc" id="L231">                ApiResponse.&lt;UserDTO&gt;builder()</span>
-<span class="nc" id="L232">                        .success(true)</span>
-<span class="nc" id="L233">                        .message(&quot;Profile updated successfully&quot;)</span>
-<span class="nc" id="L234">                        .data(convertToDTO(updatedUser))</span>
-<span class="nc" id="L235">                        .build());</span>
+<span class="fc" id="L262">        return ResponseEntity.ok(</span>
+<span class="fc" id="L263">                ApiResponse.&lt;UserDTO&gt;builder()</span>
+<span class="fc" id="L264">                        .success(true)</span>
+<span class="fc" id="L265">                        .message(&quot;Profile updated successfully&quot;)</span>
+<span class="fc" id="L266">                        .data(convertToDTO(updatedUser))</span>
+<span class="fc" id="L267">                        .build());</span>
     }
 
-    // ==================== Helper ====================
+    // PLATFORM ADMIN — Get All Users
+    @GetMapping(&quot;/all&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;List&lt;UserDTO&gt;&gt;&gt; getAllUsers(
+            @RequestHeader(&quot;X-User-Role&quot;) String role) {
+        
+<span class="fc bfc" id="L275" title="All 2 branches covered.">        if (!ROLE_PLATFORM_ADMIN.equals(role)) {</span>
+<span class="fc" id="L276">            throw new AccessDeniedException(&quot;Platform Admin privileges required&quot;);</span>
+        }
+        
+<span class="fc" id="L279">        List&lt;UserDTO&gt; users = service.getAllUsers().stream()</span>
+<span class="fc" id="L280">                .map(this::convertToDTO)</span>
+<span class="fc" id="L281">                .toList();</span>
+                
+<span class="fc" id="L283">        return ResponseEntity.ok(</span>
+<span class="fc" id="L284">                ApiResponse.&lt;List&lt;UserDTO&gt;&gt;builder()</span>
+<span class="fc" id="L285">                        .success(true)</span>
+<span class="fc" id="L286">                        .message(&quot;All users retrieved successfully&quot;)</span>
+<span class="fc" id="L287">                        .data(users)</span>
+<span class="fc" id="L288">                        .build());</span>
+    }
+
+    // PLATFORM ADMIN — Get All Restaurants
+    @GetMapping(&quot;/admin/restaurants&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;List&lt;Restaurant&gt;&gt;&gt; getAllAdminRestaurants(
+            @RequestHeader(&quot;X-User-Role&quot;) String role) {
+        
+<span class="fc bfc" id="L296" title="All 2 branches covered.">        if (!ROLE_PLATFORM_ADMIN.equals(role)) {</span>
+<span class="fc" id="L297">            throw new AccessDeniedException(&quot;Platform Admin privileges required&quot;);</span>
+        }
+        
+<span class="fc" id="L300">        List&lt;Restaurant&gt; restaurants = service.getAllPublicRestaurants();</span>
+        
+<span class="fc" id="L302">        return ResponseEntity.ok(</span>
+<span class="fc" id="L303">                ApiResponse.&lt;List&lt;Restaurant&gt;&gt;builder()</span>
+<span class="fc" id="L304">                        .success(true)</span>
+<span class="fc" id="L305">                        .message(&quot;All restaurants retrieved successfully&quot;)</span>
+<span class="fc" id="L306">                        .data(restaurants)</span>
+<span class="fc" id="L307">                        .build());</span>
+    }
+
+    // PLATFORM ADMIN — Ban/Unban User
+    @PutMapping(&quot;/ban/{userId}&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;UserDTO&gt;&gt; toggleBanUser(
+            @PathVariable Long userId,
+            @RequestHeader(&quot;X-User-Role&quot;) String role) {
+        
+<span class="fc bfc" id="L316" title="All 2 branches covered.">        if (!ROLE_PLATFORM_ADMIN.equals(role)) {</span>
+<span class="fc" id="L317">            throw new AccessDeniedException(&quot;Platform Admin privileges required&quot;);</span>
+        }
+        
+<span class="fc" id="L320">        User user = service.toggleBanUser(userId);</span>
+        
+<span class="fc" id="L322">        return ResponseEntity.ok(</span>
+<span class="fc" id="L323">                ApiResponse.&lt;UserDTO&gt;builder()</span>
+<span class="fc" id="L324">                        .success(true)</span>
+<span class="fc" id="L325">                        .message(&quot;User ban status toggled successfully&quot;)</span>
+<span class="fc" id="L326">                        .data(convertToDTO(user))</span>
+<span class="fc" id="L327">                        .build());</span>
+    }
+
+    // PLATFORM ADMIN — Ban/Unban Restaurant
+    @PutMapping(&quot;/restaurant/ban/{restaurantId}&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;Restaurant&gt;&gt; toggleBanRestaurant(
+            @PathVariable Long restaurantId,
+            @RequestHeader(&quot;X-User-Role&quot;) String role) {
+        
+<span class="fc bfc" id="L336" title="All 2 branches covered.">        if (!ROLE_PLATFORM_ADMIN.equals(role)) {</span>
+<span class="fc" id="L337">            throw new AccessDeniedException(&quot;Platform Admin privileges required&quot;);</span>
+        }
+        
+<span class="fc" id="L340">        Restaurant restaurant = service.toggleBanRestaurant(restaurantId);</span>
+        
+<span class="fc" id="L342">        return ResponseEntity.ok(</span>
+<span class="fc" id="L343">                ApiResponse.&lt;Restaurant&gt;builder()</span>
+<span class="fc" id="L344">                        .success(true)</span>
+<span class="fc" id="L345">                        .message(&quot;Restaurant ban status toggled successfully&quot;)</span>
+<span class="fc" id="L346">                        .data(restaurant)</span>
+<span class="fc" id="L347">                        .build());</span>
+    }
+
+    //  Helper 
 
     private UserDTO convertToDTO(User user) {
-<span class="fc" id="L241">        UserDTO dto = new UserDTO();</span>
-<span class="fc" id="L242">        dto.setId(user.getId());</span>
-<span class="fc" id="L243">        dto.setUsername(user.getUsername());</span>
-<span class="fc" id="L244">        dto.setEmail(user.getEmail());</span>
-<span class="fc" id="L245">        dto.setPassword(user.getPassword());</span>
-<span class="fc" id="L246">        dto.setRole(user.getRole());</span>
-<span class="fc" id="L247">        dto.setAssignedRestaurantId(user.getAssignedRestaurantId());</span>
-<span class="fc" id="L248">        dto.setKnownRestaurantIds(user.getKnownRestaurantIds());</span>
-<span class="fc" id="L249">        dto.setPhoneNumber(user.getPhoneNumber());</span>
-<span class="fc" id="L250">        dto.setAddress(user.getAddress());</span>
-<span class="fc" id="L251">        return dto;</span>
+<span class="fc" id="L353">        UserDTO dto = new UserDTO();</span>
+<span class="fc" id="L354">        dto.setId(user.getId());</span>
+<span class="fc" id="L355">        dto.setUsername(user.getUsername());</span>
+<span class="fc" id="L356">        dto.setEmail(user.getEmail());</span>
+<span class="fc" id="L357">        dto.setPassword(user.getPassword());</span>
+<span class="fc" id="L358">        dto.setRole(user.getRole());</span>
+<span class="fc" id="L359">        dto.setAssignedRestaurantId(user.getAssignedRestaurantId());</span>
+<span class="fc" id="L360">        dto.setKnownRestaurantIds(user.getKnownRestaurantIds());</span>
+<span class="fc" id="L361">        dto.setPhoneNumber(user.getPhoneNumber());</span>
+<span class="fc" id="L362">        dto.setAddress(user.getAddress());</span>
+<span class="fc" id="L363">        dto.setBanned(user.isBanned());</span>
+<span class="fc" id="L364">        return dto;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -66,7 +66,7 @@ class UserControllerTest {
         testUser.setKnownRestaurantIds(new ArrayList<>(List.of(10L)));
     }
 
-    //  POST /users/internal 
+    // Tests for internal user creation 
 
     @Test
     void createUser_success() throws Exception {
@@ -101,7 +101,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.message").value("User already exists with username: prav"));
     }
 
-    //  GET /users/username/{username} 
+    // Tests for getting user by username 
 
     @Test
     void getByUsername_found() throws Exception {
@@ -120,7 +120,7 @@ class UserControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    //  GET /users/internal/{id} 
+    // Tests for getting user by id 
 
     @Test
     void getUserById_found() throws Exception {
@@ -139,7 +139,7 @@ class UserControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    //  POST /users/restaurant 
+    // Tests for creating a restaurant 
 
     @Test
     void createRestaurant_success() throws Exception {
@@ -192,7 +192,7 @@ class UserControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    //  GET /users/restaurants 
+    // Tests for getting restaurants 
 
     @Test
     void getMyRestaurants_found() throws Exception {
@@ -214,7 +214,7 @@ class UserControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    //  GET /users/restaurant/users 
+    // Tests for getting users of a restaurant 
 
     @Test
     void getRestaurantUsers_success() throws Exception {
@@ -261,7 +261,7 @@ class UserControllerTest {
                 .andExpect(status().isForbidden());
     }
 
-    //  PUT /users/promote/{userId} 
+    // Tests for promoting a user 
 
     @Test
     void promote_success() throws Exception {
@@ -316,7 +316,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.message").value("Only USER role can be promoted"));
     }
 
-    //  PUT /users/demote/{userId} 
+    // Tests for demoting a user 
 
     @Test
     void demote_success() throws Exception {
@@ -392,5 +392,82 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest());
+    }
+
+    // PLATFORM_ADMIN Endpoints
+
+    @Test
+    void getAllUsers_platformAdmin_success() throws Exception {
+        when(service.getAllUsers()).thenReturn(List.of(testUser));
+
+        mockMvc.perform(get("/users/all")
+                        .header("X-User-Role", "PLATFORM_ADMIN"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].username").value("prav"));
+    }
+
+    @Test
+    void getAllUsers_notPlatformAdmin_forbidden() throws Exception {
+        mockMvc.perform(get("/users/all")
+                        .header("X-User-Role", "ADMIN"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void getAllAdminRestaurants_platformAdmin_success() throws Exception {
+        com.prav.user.model.Restaurant r = new com.prav.user.model.Restaurant();
+        r.setId(10L);
+        r.setName("Test Rest");
+        when(service.getAllPublicRestaurants()).thenReturn(List.of(r));
+
+        mockMvc.perform(get("/users/admin/restaurants")
+                        .header("X-User-Role", "PLATFORM_ADMIN"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].name").value("Test Rest"));
+    }
+
+    @Test
+    void getAllAdminRestaurants_notPlatformAdmin_forbidden() throws Exception {
+        mockMvc.perform(get("/users/admin/restaurants")
+                        .header("X-User-Role", "USER"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void toggleBanUser_platformAdmin_success() throws Exception {
+        testUser.setBanned(true);
+        when(service.toggleBanUser(1L)).thenReturn(testUser);
+
+        mockMvc.perform(put("/users/ban/1")
+                        .header("X-User-Role", "PLATFORM_ADMIN"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.banned").value(true));
+    }
+
+    @Test
+    void toggleBanUser_notPlatformAdmin_forbidden() throws Exception {
+        mockMvc.perform(put("/users/ban/1")
+                        .header("X-User-Role", "USER"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void toggleBanRestaurant_platformAdmin_success() throws Exception {
+        com.prav.user.model.Restaurant r = new com.prav.user.model.Restaurant();
+        r.setId(10L);
+        r.setBanned(true);
+        when(service.toggleBanRestaurant(10L)).thenReturn(r);
+
+        mockMvc.perform(put("/users/restaurant/ban/10")
+                        .header("X-User-Role", "PLATFORM_ADMIN"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.banned").value(true));
+    }
+
+    @Test
+    void toggleBanRestaurant_notPlatformAdmin_forbidden() throws Exception {
+        mockMvc.perform(put("/users/restaurant/ban/10")
+                        .header("X-User-Role", "USER"))
+                .andExpect(status().isForbidden());
     }
 }

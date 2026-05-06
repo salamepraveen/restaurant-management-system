@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserDTO.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Auth Service</a> &gt; <a href="index.source.html" class="el_package">com.prav.auth.dto</a> &gt; <span class="el_source">UserDTO.java</span></div><h1>UserDTO.java</h1><pre class="source lang-java linenums">package com.prav.auth.dto;
+
+import java.util.List;
+
+public class UserDTO {
+    
+    private Long id;
+    private String username;
+    private String password;
+    private String email;
+    private String role;
+    private Long assignedRestaurantId;
+    private List&lt;Long&gt; knownRestaurantIds;
+    private boolean isBanned;
+
+    public boolean isBanned() {
+<span class="fc" id="L17">        return isBanned;</span>
+    }
+
+    public void setBanned(boolean isBanned) {
+<span class="fc" id="L21">        this.isBanned = isBanned;</span>
+<span class="fc" id="L22">    }</span>
+    
+<span class="fc" id="L24">    public UserDTO() {}</span>
+
+    public String getEmail() {
+<span class="fc" id="L27">        return email;</span>
+    }
+    public void setEmail(String email) {
+<span class="fc" id="L30">        this.email = email;</span>
+<span class="fc" id="L31">    }</span>
+    public Long getId() {
+<span class="fc" id="L33">        return id;</span>
+    }
+    public void setId(Long id) {
+<span class="fc" id="L36">        this.id = id;</span>
+<span class="fc" id="L37">    }</span>
+    public String getUsername() {
+<span class="fc" id="L39">        return username;</span>
+    }
+    public void setUsername(String username) {
+<span class="fc" id="L42">        this.username = username;</span>
+<span class="fc" id="L43">    }</span>
+    public String getPassword() {
+<span class="fc" id="L45">        return password;</span>
+    }
+    public void setPassword(String password) {
+<span class="fc" id="L48">        this.password = password;</span>
+<span class="fc" id="L49">    }</span>
+    public String getRole() {
+<span class="fc" id="L51">        return role;</span>
+    }
+    public void setRole(String role) {
+<span class="fc" id="L54">        this.role = role;</span>
+<span class="fc" id="L55">    }</span>
+    public Long getAssignedRestaurantId() {
+<span class="fc" id="L57">        return assignedRestaurantId;</span>
+    }
+    public void setAssignedRestaurantId(Long assignedRestaurantId) {
+<span class="fc" id="L60">        this.assignedRestaurantId = assignedRestaurantId;</span>
+<span class="fc" id="L61">    }</span>
+    public List&lt;Long&gt; getKnownRestaurantIds() {
+<span class="fc" id="L63">        return knownRestaurantIds;</span>
+    }
+    public void setKnownRestaurantIds(List&lt;Long&gt; knownRestaurantIds) {
+<span class="fc" id="L66">        this.knownRestaurantIds = knownRestaurantIds;</span>
+<span class="fc" id="L67">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

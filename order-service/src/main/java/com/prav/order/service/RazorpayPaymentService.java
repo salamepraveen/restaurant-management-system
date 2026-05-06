@@ -17,7 +17,6 @@ import java.math.BigDecimal;
 public class RazorpayPaymentService {
  
     private static final Logger log = LoggerFactory.getLogger(RazorpayPaymentService.class);
-//    private static final String BORDER = "========================================";
 
     private final String keyId;
     private final String keySecret;
@@ -50,12 +49,13 @@ public class RazorpayPaymentService {
 
             Order razorpayOrder = client.Orders.create(orderRequest);
 
-//            log.info("========================================");
             log.info("  RAZORPAY ORDER CREATED");
             log.info("  Order ID: {}", orderId);
-            log.info("  Razorpay Order ID: {}", razorpayOrder.get("id").toString());
+            if (log.isInfoEnabled()) {
+                Object razorpayId = razorpayOrder.get("id");
+                log.info("  Razorpay Order ID: {}", razorpayId);
+            }
             log.info("  Amount: {} {}", currency, amount);
-//            log.info("========================================");
 
             return razorpayOrder;
         } catch (RazorpayException e) {
@@ -93,13 +93,11 @@ public class RazorpayPaymentService {
             refundRequest.put("amount", refundInPaise);
             refundRequest.put("speed", "normal");
 
-//            log.info("========================================");
             log.info("  PROCESSING REFUND");
             log.info("  Order ID: {}", orderId);
             log.info("  Original: {} {}", currency, originalAmount);
             log.info("  Refund ({}%): {} {}", refundPercentage, currency, refundAmount);
             log.info("  Deduction: {} {}", currency, deduction);
-//            log.info("========================================");
 
             Refund refund = client.Payments.refund(razorpayPaymentId, refundRequest);
 

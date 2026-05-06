@@ -17,6 +17,16 @@ public class Restaurant {
     
     private String address;
 
+    private boolean isBanned = false;
+
+    public boolean isBanned() {
+        return isBanned;
+    }
+
+    public void setBanned(boolean banned) {
+        this.isBanned = banned;
+    }
+
     public Long getId() {
 		return id;
 	}

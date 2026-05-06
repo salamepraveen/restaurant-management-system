@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import java.lang.reflect.Field;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -39,8 +40,20 @@ public class AuthServiceTest {
     private UserDTO testUser;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         authService = new AuthService(userClient, jwtUtil, otpService, passwordEncoder);
+        
+        Field usernameField = AuthService.class.getDeclaredField("platformAdminUsername");
+        usernameField.setAccessible(true);
+        usernameField.set(authService, "platformadmin");
+
+        Field passwordField = AuthService.class.getDeclaredField("platformAdminPassword");
+        passwordField.setAccessible(true);
+        passwordField.set(authService, "Platform@123");
+
+        Field emailField = AuthService.class.getDeclaredField("platformAdminEmail");
+        emailField.setAccessible(true);
+        emailField.set(authService, "admin@platform.com");
         testUser = new UserDTO();
         testUser.setId(1L);
         testUser.setUsername("testuser");
@@ -64,6 +77,32 @@ public class AuthServiceTest {
         assertEquals("fake-jwt-token", response.getToken());
         assertEquals("testuser", response.getUsername());
         verify(userClient).getUserByUsername("testuser");
+    }
+
+    @Test
+    void signin_platformAdmin_success() {
+        AuthRequest req = new AuthRequest();
+        req.setUsername("platformadmin");
+        req.setPassword("Platform@123");
+        
+        when(jwtUtil.generateToken(any(UserDTO.class))).thenReturn("admin-token");
+        
+        AuthResponse response = authService.signin(req);
+        
+        assertEquals("admin-token", response.getToken());
+        assertEquals("PLATFORM_ADMIN", response.getRole());
+    }
+
+    @Test
+    void signin_bannedUser_throwsException() {
+        testUser.setBanned(true);
+        when(userClient.getUserByUsername("testuser")).thenReturn(testUser);
+        
+        AuthRequest req = new AuthRequest();
+        req.setUsername("testuser");
+        req.setPassword("password123");
+        
+        assertThrows(InvalidCredentialsException.class, () -> authService.signin(req));
     }
 
     @Test
@@ -194,6 +233,18 @@ public class AuthServiceTest {
         assertNotNull(response);
         assertEquals("tk", response.getToken());
         verify(otpService).verifyLoginOtp("test@test.com", "123456");
+    }
+
+    @Test
+    void verifyLoginOtp_bannedUser_throwsException() {
+        testUser.setBanned(true);
+        when(userClient.getUserByEmail("test@test.com")).thenReturn(testUser);
+
+        OtpVerifyDTO req = new OtpVerifyDTO();
+        req.setEmail("test@test.com");
+        req.setOtp("123456");
+
+        assertThrows(InvalidCredentialsException.class, () -> authService.verifyLoginOtp(req));
     }
 
     @Test

@@ -20,7 +20,7 @@ public class AuthController {
         this.service = service;
     }
 
-    // ==================== SIGNUP (OTP-based) ====================
+    //  SIGNUP (OTP-based) 
 
     @PostMapping("/signup/request")
     public ResponseEntity<ApiResponse<Void>> requestSignupOtp(@Valid @RequestBody OtpRequestDTO req) {
@@ -43,7 +43,7 @@ public class AuthController {
                         .build());
     }
 
-    @PostMapping("/signup/direct")
+    @PostMapping("/signup/direct") 
     public ResponseEntity<ApiResponse<AuthResponse>> signupDirect(@Valid @RequestBody AuthRequest req) {
         AuthResponse response = service.signupDirect(req);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -54,7 +54,7 @@ public class AuthController {
                         .build());
     }
 
-    // ==================== SIGNIN — Password ====================
+    //  SIGNIN — Password 
 
     @PostMapping("/signin")
     public ResponseEntity<ApiResponse<AuthResponse>> signin(@Valid @RequestBody AuthRequest req) {
@@ -67,7 +67,7 @@ public class AuthController {
                         .build());
     }
 
-    // ==================== SIGNIN — OTP ====================
+    //  SIGNIN — OTP 
 
     @PostMapping("/signin/otp/request")
     public ResponseEntity<ApiResponse<Void>> requestLoginOtp(@Valid @RequestBody OtpLoginRequestDTO req) {

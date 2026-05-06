@@ -14,6 +14,7 @@ import com.prav.auth.service.OtpService.SignupData;
 import com.prav.auth.util.JwtUtil;
 import com.prav.common.exception.ConflictException;
 import com.prav.common.exception.ResourceNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
 public class AuthService {
@@ -21,26 +22,35 @@ public class AuthService {
     private final UserClient userClient;
     private final JwtUtil jwtUtil;
     private final OtpService otpService;
-    private final org.springframework.security.crypto.password.PasswordEncoder encoder;
+    private final PasswordEncoder encoder;
 
-    public AuthService(UserClient userClient, JwtUtil jwtUtil, OtpService otpService, org.springframework.security.crypto.password.PasswordEncoder encoder) {
+    @org.springframework.beans.factory.annotation.Value("${platform.admin.username:platformadmin}")
+    private String platformAdminUsername;
+
+    @org.springframework.beans.factory.annotation.Value("${platform.admin.password:Platform@123}")
+    private String platformAdminPassword;
+
+    @org.springframework.beans.factory.annotation.Value("${platform.admin.email:admin@platform.com}")
+    private String platformAdminEmail;
+
+    public AuthService(UserClient userClient, JwtUtil jwtUtil, OtpService otpService, PasswordEncoder encoder) {
         this.userClient = userClient;
         this.jwtUtil = jwtUtil;
         this.otpService = otpService;
         this.encoder = encoder;
     }
 
-    // ==================== SIGNUP (with OTP verification) ====================
+    //  SIGNUP - with OTP verification
 
     public void requestSignupOtp(OtpRequestDTO req) {
-        // Check if username or email already exists
+        // if username or email already exists
         try {
             userClient.getUserByUsername(req.getUsername());
             throw new ConflictException("Username already taken: " + req.getUsername());
         } catch (ConflictException e) {
             throw e;
         } catch (Exception e) {
-            // 404 means user doesn't exist — good
+       
             if (e.getMessage() == null || !e.getMessage().contains("404")) {
                 throw new RuntimeException("Error checking username: " + e.getMessage(), e);
             }
@@ -54,7 +64,7 @@ public class AuthService {
         // Verify OTP and get pending signup data
         SignupData signupData = otpService.verifySignupOtp(req.getEmail(), req.getOtp());
 
-        // Create user via user-service
+        // Creating user via user-service  --  thoda bahut fetch nhi ho rha
         UserDTO user = new UserDTO();
         user.setUsername(signupData.getUsername());
         user.setPassword(encoder.encode(signupData.getPassword()));
@@ -67,17 +77,17 @@ public class AuthService {
         return buildAuthResponse(createdUser, token);
     }
     
-    // ==================== SIGNUP (Direct, without OTP) ====================
+    //  SIGNUP (Direct, without OTP) 
     
     public AuthResponse signupDirect(AuthRequest req) {
-    	// Check if username already exists
+    	//if username already exists
         try {
             userClient.getUserByUsername(req.getUsername());
             throw new ConflictException("Username already taken: " + req.getUsername());
         } catch (ConflictException e) {
             throw e;
         } catch (Exception e) {
-            // 404 means user doesn't exist — good
+            // 404 
             if (e.getMessage() == null || !e.getMessage().contains("404")) {
                 throw new RuntimeException("Error checking username: " + e.getMessage(), e);
             }
@@ -96,14 +106,29 @@ public class AuthService {
         return buildAuthResponse(createdUser, token);
     }
 
-    // ==================== SIGNIN — Username + Password ====================
+    //  SIGNIN — Username + Password 
 
     public AuthResponse signin(AuthRequest req) {
+        // Check for Platform Admin credentials
+        if (req.getUsername().equals(platformAdminUsername) && req.getPassword().equals(platformAdminPassword)) {
+            UserDTO platformAdmin = new UserDTO();
+            platformAdmin.setId(0L); // special ID for platform admin
+            platformAdmin.setUsername(platformAdminUsername);
+            platformAdmin.setEmail(platformAdminEmail);
+            platformAdmin.setRole("PLATFORM_ADMIN");
+            String token = jwtUtil.generateToken(platformAdmin);
+            return buildAuthResponse(platformAdmin, token);
+        }
+
         UserDTO user;
         try {
             user = userClient.getUserByUsername(req.getUsername());
         } catch (Exception e) {
             throw new InvalidCredentialsException("Invalid credentials");
+        }
+
+        if (user.isBanned()) {
+            throw new com.prav.auth.exception.InvalidCredentialsException("Your account has been banned by the platform administrator.");
         }
 
         if (!encoder.matches(req.getPassword(), user.getPassword())) {
@@ -114,7 +139,7 @@ public class AuthService {
         return buildAuthResponse(user, token);
     }
 
-    // ==================== SIGNIN — OTP Login ====================
+    //  SIGNIN — OTP Login 
 
     public void requestLoginOtp(OtpLoginRequestDTO req) {
         // Check if user exists and get their email
@@ -144,11 +169,14 @@ public class AuthService {
              throw new InvalidCredentialsException("Invalid credentials");
         }
 
+        if (user.isBanned()) {
+            throw new com.prav.auth.exception.InvalidCredentialsException("Your account has been banned by the platform administrator.");
+        }
         String token = jwtUtil.generateToken(user);
         return buildAuthResponse(user, token);
     }
 
-    // ==================== HELPERS ====================
+    //  HELPERS 
 
     private AuthResponse buildAuthResponse(UserDTO user, String token) {
         AuthResponse response = new AuthResponse();

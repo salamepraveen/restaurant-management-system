@@ -1,0 +1,12 @@
+D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\test\java\com\prav\auth\aspect\ApiLoggingAspectTest.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\test\java\com\prav\auth\client\ClientCoverageTest.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\test\java\com\prav\auth\client\UserClientFallbackFactoryTest.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\test\java\com\prav\auth\config\SecurityConfigTest.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\test\java\com\prav\auth\controller\AuthControllerTest.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\test\java\com\prav\auth\dto\AuthRequestValidationTest.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\test\java\com\prav\auth\dto\DTOCoverageTest.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\test\java\com\prav\auth\exception\ExceptionCoverageTest.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\test\java\com\prav\auth\model\ModelCoverageTest.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\test\java\com\prav\auth\service\AuthServiceTest.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\test\java\com\prav\auth\service\OtpServiceTest.java
+D:\Eclipse IDE\Pizza\pizza-restaurant\auth-service\src\test\java\com\prav\auth\util\JwtUtilTest.java

@@ -28,6 +28,16 @@ public class User {
     
     private String address;
 
+    private boolean isBanned = false;
+
+    public boolean isBanned() {
+        return isBanned;
+    }
+
+    public void setBanned(boolean banned) {
+        this.isBanned = banned;
+    }
+
     @ElementCollection
     @CollectionTable(name = "user_known_restaurants",
             joinColumns = @JoinColumn(name = "user_id"))

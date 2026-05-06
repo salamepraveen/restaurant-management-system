@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Auth Service</a> &gt; <a href="index.source.html" class="el_package">com.prav.auth.controller</a> &gt; <span class="el_source">AuthController.java</span></div><h1>AuthController.java</h1><pre class="source lang-java linenums">package com.prav.auth.controller;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import com.prav.auth.dto.*;
+import com.prav.auth.service.AuthService;
+import com.prav.common.dto.ApiResponse;
+
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping(&quot;/auth&quot;)
+public class AuthController {
+
+    private final AuthService service;
+ 
+<span class="fc" id="L19">    public AuthController(AuthService service) {</span>
+<span class="fc" id="L20">        this.service = service;</span>
+<span class="fc" id="L21">    }</span>
+
+    //  SIGNUP (OTP-based) 
+
+    @PostMapping(&quot;/signup/request&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;Void&gt;&gt; requestSignupOtp(@Valid @RequestBody OtpRequestDTO req) {
+<span class="fc" id="L27">        service.requestSignupOtp(req);</span>
+<span class="fc" id="L28">        return ResponseEntity.ok(</span>
+<span class="fc" id="L29">                ApiResponse.&lt;Void&gt;builder()</span>
+<span class="fc" id="L30">                        .success(true)</span>
+<span class="fc" id="L31">                        .message(&quot;OTP sent to your email. Please verify to complete signup.&quot;)</span>
+<span class="fc" id="L32">                        .build());</span>
+    }
+
+    @PostMapping(&quot;/signup/verify&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;AuthResponse&gt;&gt; verifySignup(@Valid @RequestBody OtpVerifyDTO req) {
+<span class="fc" id="L37">        AuthResponse response = service.verifySignupAndCreate(req);</span>
+<span class="fc" id="L38">        return ResponseEntity.status(HttpStatus.CREATED)</span>
+<span class="fc" id="L39">                .body(ApiResponse.&lt;AuthResponse&gt;builder()</span>
+<span class="fc" id="L40">                        .success(true)</span>
+<span class="fc" id="L41">                        .message(&quot;Account created successfully&quot;)</span>
+<span class="fc" id="L42">                        .data(response)</span>
+<span class="fc" id="L43">                        .build());</span>
+    }
+
+    @PostMapping(&quot;/signup/direct&quot;) 
+    public ResponseEntity&lt;ApiResponse&lt;AuthResponse&gt;&gt; signupDirect(@Valid @RequestBody AuthRequest req) {
+<span class="fc" id="L48">        AuthResponse response = service.signupDirect(req);</span>
+<span class="fc" id="L49">        return ResponseEntity.status(HttpStatus.CREATED)</span>
+<span class="fc" id="L50">                .body(ApiResponse.&lt;AuthResponse&gt;builder()</span>
+<span class="fc" id="L51">                        .success(true)</span>
+<span class="fc" id="L52">                        .message(&quot;Account created successfully&quot;)</span>
+<span class="fc" id="L53">                        .data(response)</span>
+<span class="fc" id="L54">                        .build());</span>
+    }
+
+    //  SIGNIN — Password 
+
+    @PostMapping(&quot;/signin&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;AuthResponse&gt;&gt; signin(@Valid @RequestBody AuthRequest req) {
+<span class="fc" id="L61">        AuthResponse response = service.signin(req);</span>
+<span class="fc" id="L62">        return ResponseEntity.ok(</span>
+<span class="fc" id="L63">                ApiResponse.&lt;AuthResponse&gt;builder()</span>
+<span class="fc" id="L64">                        .success(true)</span>
+<span class="fc" id="L65">                        .message(&quot;Signed in successfully&quot;)</span>
+<span class="fc" id="L66">                        .data(response)</span>
+<span class="fc" id="L67">                        .build());</span>
+    }
+
+    //  SIGNIN — OTP 
+
+    @PostMapping(&quot;/signin/otp/request&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;Void&gt;&gt; requestLoginOtp(@Valid @RequestBody OtpLoginRequestDTO req) {
+<span class="fc" id="L74">        service.requestLoginOtp(req);</span>
+<span class="fc" id="L75">        return ResponseEntity.ok(</span>
+<span class="fc" id="L76">                ApiResponse.&lt;Void&gt;builder()</span>
+<span class="fc" id="L77">                        .success(true)</span>
+<span class="fc" id="L78">                        .message(&quot;OTP sent to your registered email.&quot;)</span>
+<span class="fc" id="L79">                        .build());</span>
+    }
+
+    @PostMapping(&quot;/signin/otp/verify&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;AuthResponse&gt;&gt; verifyLoginOtp(@Valid @RequestBody OtpVerifyDTO req) {
+<span class="fc" id="L84">        AuthResponse response = service.verifyLoginOtp(req);</span>
+<span class="fc" id="L85">        return ResponseEntity.ok(</span>
+<span class="fc" id="L86">                ApiResponse.&lt;AuthResponse&gt;builder()</span>
+<span class="fc" id="L87">                        .success(true)</span>
+<span class="fc" id="L88">                        .message(&quot;Signed in successfully via OTP&quot;)</span>
+<span class="fc" id="L89">                        .data(response)</span>
+<span class="fc" id="L90">                        .build());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

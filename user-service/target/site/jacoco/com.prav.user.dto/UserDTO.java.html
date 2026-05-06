@@ -11,71 +11,83 @@ import java.util.List;
     @Size(min = 2, max = 50, message = &quot;Username must be 2-50 characters&quot;)
     private String username;
     @NotBlank(message = &quot;Password is required&quot;)
-    @Size(min = 6, max = 100, message = &quot;Password must be 6-100 characters&quot;)
+    @Pattern(regexp = &quot;^(?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&amp;+=!]).{8,}$&quot;, message = &quot;Password must be at least 8 characters long, contain at least one digit, one lowercase letter, one uppercase letter, and one special character&quot;)
     private String password;
+
+    @NotBlank(message = &quot;Email is required&quot;)
+    @Pattern(regexp = &quot;^[A-Za-z0-9+_.-]+@(.+)$&quot;, message = &quot;Invalid email format&quot;)
     private String email;
     public String getEmail() {
-<span class="fc" id="L18">		return email;</span>
+<span class="fc" id="L21">		return email;</span>
 	}
 	public void setEmail(String email) {
-<span class="fc" id="L21">		this.email = email;</span>
-<span class="fc" id="L22">	}</span>
+<span class="fc" id="L24">		this.email = email;</span>
+<span class="fc" id="L25">	}</span>
 	private String role;
     private Long assignedRestaurantId;
     private List&lt;Long&gt; knownRestaurantIds;
     private String phoneNumber;
     private String address;
+    private boolean isBanned;
+    
+    public boolean isBanned() {
+<span class="fc" id="L34">        return isBanned;</span>
+    }
+
+    public void setBanned(boolean isBanned) {
+<span class="fc" id="L38">        this.isBanned = isBanned;</span>
+<span class="fc" id="L39">    }</span>
 	public Long getId() {
-<span class="fc" id="L29">		return id;</span>
+<span class="fc" id="L41">		return id;</span>
 	}
 	public void setId(Long id) {
-<span class="fc" id="L32">		this.id = id;</span>
-<span class="fc" id="L33">	}</span>
+<span class="fc" id="L44">		this.id = id;</span>
+<span class="fc" id="L45">	}</span>
 	public String getUsername() {
-<span class="fc" id="L35">		return username;</span>
+<span class="fc" id="L47">		return username;</span>
 	}
 	public void setUsername(String username) {
-<span class="fc" id="L38">		this.username = username;</span>
-<span class="fc" id="L39">	}</span>
+<span class="fc" id="L50">		this.username = username;</span>
+<span class="fc" id="L51">	}</span>
 	public String getPassword() {
-<span class="fc" id="L41">		return password;</span>
+<span class="fc" id="L53">		return password;</span>
 	}
 	public void setPassword(String password) {
-<span class="fc" id="L44">		this.password = password;</span>
-<span class="fc" id="L45">	}</span>
+<span class="fc" id="L56">		this.password = password;</span>
+<span class="fc" id="L57">	}</span>
 	public String getRole() {
-<span class="fc" id="L47">		return role;</span>
+<span class="fc" id="L59">		return role;</span>
 	}
 	public void setRole(String role) {
-<span class="fc" id="L50">		this.role = role;</span>
-<span class="fc" id="L51">	}</span>
+<span class="fc" id="L62">		this.role = role;</span>
+<span class="fc" id="L63">	}</span>
 	public Long getAssignedRestaurantId() {
-<span class="fc" id="L53">		return assignedRestaurantId;</span>
+<span class="fc" id="L65">		return assignedRestaurantId;</span>
 	}
 	public void setAssignedRestaurantId(Long assignedRestaurantId) {
-<span class="fc" id="L56">		this.assignedRestaurantId = assignedRestaurantId;</span>
-<span class="fc" id="L57">	}</span>
+<span class="fc" id="L68">		this.assignedRestaurantId = assignedRestaurantId;</span>
+<span class="fc" id="L69">	}</span>
 	public List&lt;Long&gt; getKnownRestaurantIds() {
-<span class="fc" id="L59">		return knownRestaurantIds;</span>
+<span class="fc" id="L71">		return knownRestaurantIds;</span>
 	}
 	public void setKnownRestaurantIds(List&lt;Long&gt; knownRestaurantIds) {
-<span class="fc" id="L62">		this.knownRestaurantIds = knownRestaurantIds;</span>
-<span class="fc" id="L63">	}</span>
+<span class="fc" id="L74">		this.knownRestaurantIds = knownRestaurantIds;</span>
+<span class="fc" id="L75">	}</span>
 
 	public String getPhoneNumber() {
-<span class="fc" id="L66">		return phoneNumber;</span>
+<span class="fc" id="L78">		return phoneNumber;</span>
 	}
 
 	public void setPhoneNumber(String phoneNumber) {
-<span class="fc" id="L70">		this.phoneNumber = phoneNumber;</span>
-<span class="fc" id="L71">	}</span>
+<span class="fc" id="L82">		this.phoneNumber = phoneNumber;</span>
+<span class="fc" id="L83">	}</span>
 
 	public String getAddress() {
-<span class="fc" id="L74">		return address;</span>
+<span class="fc" id="L86">		return address;</span>
 	}
 
 	public void setAddress(String address) {
-<span class="fc" id="L78">		this.address = address;</span>
-<span class="fc" id="L79">	}</span>
+<span class="fc" id="L90">		this.address = address;</span>
+<span class="fc" id="L91">	}</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

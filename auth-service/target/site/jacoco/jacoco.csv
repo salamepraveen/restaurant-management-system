@@ -1,0 +1,24 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+Auth Service,com.prav.auth.dto,OtpVerifyDTO,0,17,0,0,0,7,0,5,0,5
+Auth Service,com.prav.auth.dto,AuthResponse,0,52,0,0,0,22,0,15,0,15
+Auth Service,com.prav.auth.dto,OtpRequestDTO,0,24,0,0,0,7,0,7,0,7
+Auth Service,com.prav.auth.dto,UserDTO,0,59,0,0,0,25,0,17,0,17
+Auth Service,com.prav.auth.dto,LoginRequest,17,0,0,0,7,0,5,0,5,0
+Auth Service,com.prav.auth.dto,OtpLoginRequestDTO,0,10,0,0,0,3,0,3,0,3
+Auth Service,com.prav.auth.dto,SignupRequest,17,0,0,0,7,0,5,0,5,0
+Auth Service,com.prav.auth.dto,AuthRequest,0,24,0,0,0,7,0,7,0,7
+Auth Service,com.prav.auth.exception,GlobalExceptionHandler,0,72,0,0,0,17,0,5,0,5
+Auth Service,com.prav.auth.exception,InvalidCredentialsException,5,4,0,0,2,2,1,1,1,1
+Auth Service,com.prav.auth.config,SecurityConfig,45,7,0,0,8,2,5,2,5,2
+Auth Service,com.prav.auth.util,JwtUtil,0,50,0,0,0,16,0,3,0,3
+Auth Service,com.prav.auth,AuthServiceApplication,5,3,0,0,2,1,1,1,1,1
+Auth Service,com.prav.auth.model,User,0,45,0,0,0,19,0,13,0,13
+Auth Service,com.prav.auth.service,OtpService,26,289,7,19,6,67,7,14,0,8
+Auth Service,com.prav.auth.service,AuthService,16,342,4,18,4,77,4,15,0,8
+Auth Service,com.prav.auth.service,OtpService.SignupData,0,21,0,0,0,8,0,4,0,4
+Auth Service,com.prav.auth.service,OtpService.OtpEntry,0,18,0,0,0,7,0,1,0,1
+Auth Service,com.prav.auth.controller,AuthController,0,94,0,0,0,43,0,7,0,7
+Auth Service,com.prav.auth.client,UserClientFallback,0,18,0,0,0,4,0,4,0,4
+Auth Service,com.prav.auth.client,UserClientFallbackFactory,0,9,0,0,0,2,0,2,0,2
+Auth Service,com.prav.auth.client,UserClientFallbackFactory.new UserClient() {...},0,33,0,0,0,4,0,4,0,4
+Auth Service,com.prav.auth.aspect,ApiLoggingAspect,46,361,20,18,8,74,20,10,3,8

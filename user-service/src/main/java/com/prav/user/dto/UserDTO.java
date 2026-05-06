@@ -11,7 +11,7 @@ public class UserDTO {
     @Size(min = 2, max = 50, message = "Username must be 2-50 characters")
     private String username;
     @NotBlank(message = "Password is required")
-    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}$", message = "Password must be at least 8 characters long, contain at least one digit, one lowercase letter, one uppercase letter, and one special character")
+    @Pattern(regexp = "^(?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}$", message = "Password must be at least 8 characters long, contain at least one digit, one lowercase letter, one uppercase letter, and one special character")
     private String password;
 
     @NotBlank(message = "Email is required")
@@ -28,6 +28,15 @@ public class UserDTO {
     private List<Long> knownRestaurantIds;
     private String phoneNumber;
     private String address;
+    private boolean isBanned;
+    
+    public boolean isBanned() {
+        return isBanned;
+    }
+
+    public void setBanned(boolean isBanned) {
+        this.isBanned = isBanned;
+    }
 	public Long getId() {
 		return id;
 	}

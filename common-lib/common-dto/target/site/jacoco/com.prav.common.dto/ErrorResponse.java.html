@@ -20,7 +20,7 @@ public class ErrorResponse {
     @Builder.Default
 <span class="nc" id="L21">    private LocalDateTime timestamp = LocalDateTime.now();</span>
 <span class="fc" id="L22">    private List&lt;String&gt; fieldErrors;</span>
-
+ 
     public static ErrorResponse of(int status, String error, String message, String path) {
 <span class="nc" id="L25">        return ErrorResponse.builder()</span>
 <span class="nc" id="L26">                .status(status)</span>

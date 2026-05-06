@@ -28,82 +28,92 @@ import java.util.List;
     
     private String address;
 
-<span class="fc" id="L31">    @ElementCollection</span>
+<span class="fc" id="L31">    private boolean isBanned = false;</span>
+
+    public boolean isBanned() {
+<span class="fc" id="L34">        return isBanned;</span>
+    }
+
+    public void setBanned(boolean banned) {
+<span class="fc" id="L38">        this.isBanned = banned;</span>
+<span class="fc" id="L39">    }</span>
+
+<span class="fc" id="L41">    @ElementCollection</span>
     @CollectionTable(name = &quot;user_known_restaurants&quot;,
             joinColumns = @JoinColumn(name = &quot;user_id&quot;))
     @Column(name = &quot;restaurant_id&quot;)
     private List&lt;Long&gt; knownRestaurantIds = new ArrayList&lt;&gt;();
 
 	public Long getId() {
-<span class="fc" id="L38">		return id;</span>
+<span class="fc" id="L48">		return id;</span>
 	}
 
 	public void setId(Long id) {
-<span class="fc" id="L42">		this.id = id;</span>
-<span class="fc" id="L43">	}</span>
+<span class="fc" id="L52">		this.id = id;</span>
+<span class="fc" id="L53">	}</span>
 
 	public String getUsername() {
-<span class="fc" id="L46">		return username;</span>
+<span class="fc" id="L56">		return username;</span>
 	}
 
 	public void setUsername(String username) {
-<span class="fc" id="L50">		this.username = username;</span>
-<span class="fc" id="L51">	}</span>
+<span class="fc" id="L60">		this.username = username;</span>
+<span class="fc" id="L61">	}</span>
 
 	public String getPassword() {
-<span class="fc" id="L54">		return password;</span>
+<span class="fc" id="L64">		return password;</span>
 	}
 
 	public void setPassword(String password) {
-<span class="fc" id="L58">		this.password = password;</span>
-<span class="fc" id="L59">	}</span>
+<span class="fc" id="L68">		this.password = password;</span>
+<span class="fc" id="L69">	}</span>
 
 	public String getEmail() {
-<span class="fc" id="L62">		return email;</span>
+<span class="fc" id="L72">		return email;</span>
 	}
 
 	public void setEmail(String email) {
-<span class="fc" id="L66">		this.email = email;</span>
-<span class="fc" id="L67">	}</span>
+<span class="fc" id="L76">		this.email = email;</span>
+<span class="fc" id="L77">	}</span>
 
 	public String getRole() {
-<span class="fc" id="L70">		return role;</span>
+<span class="fc" id="L80">		return role;</span>
 	}
 
 	public void setRole(String role) {
-<span class="fc" id="L74">		this.role = role;</span>
-<span class="fc" id="L75">	}</span>
+<span class="fc" id="L84">		this.role = role;</span>
+<span class="fc" id="L85">	}</span>
 
 	public Long getAssignedRestaurantId() {
-<span class="fc" id="L78">		return assignedRestaurantId;</span>
+<span class="fc" id="L88">		return assignedRestaurantId;</span>
 	}
 
 	public void setAssignedRestaurantId(Long assignedRestaurantId) {
-<span class="fc" id="L82">		this.assignedRestaurantId = assignedRestaurantId;</span>
-<span class="fc" id="L83">	}</span>
+<span class="fc" id="L92">		this.assignedRestaurantId = assignedRestaurantId;</span>
+<span class="fc" id="L93">	}</span>
 
 	public List&lt;Long&gt; getKnownRestaurantIds() {
-<span class="fc" id="L86">		return knownRestaurantIds;</span>
+<span class="fc" id="L96">		return knownRestaurantIds;</span>
 	}
 
 	public void setKnownRestaurantIds(List&lt;Long&gt; knownRestaurantIds) {
-<span class="fc" id="L90">		this.knownRestaurantIds = knownRestaurantIds;</span>
-<span class="fc" id="L91">	}</span>
+<span class="fc" id="L100">		this.knownRestaurantIds = knownRestaurantIds;</span>
+<span class="fc" id="L101">	}</span>
 
 	public String getPhoneNumber() {
-<span class="fc" id="L94">		return phoneNumber;</span>
+<span class="fc" id="L104">		return phoneNumber;</span>
 	}
 
 	public void setPhoneNumber(String phoneNumber) {
-<span class="fc" id="L98">		this.phoneNumber = phoneNumber;</span>
-<span class="fc" id="L99">	}</span>
+<span class="fc" id="L108">		this.phoneNumber = phoneNumber;</span>
+<span class="fc" id="L109">	}</span>
 
 	public String getAddress() {
-<span class="fc" id="L102">		return address;</span>
+<span class="fc" id="L112">		return address;</span>
 	}
 
 	public void setAddress(String address) {
-<span class="fc" id="L106">		this.address = address;</span>
-<span class="fc" id="L107">	}</span>
+<span class="fc" id="L116">		this.address = address;</span>
+<span class="fc" id="L117">	}</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

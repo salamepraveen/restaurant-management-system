@@ -42,6 +42,16 @@ class JwtFilter2Test {
         when(request.getMethod()).thenReturn(org.springframework.http.HttpMethod.GET);
         when(request.getPath()).thenReturn(org.springframework.http.server.RequestPath.parse(java.net.URI.create("/test"), ""));
         when(chain.filter(any())).thenReturn(Mono.empty());
+
+        ServerHttpRequest.Builder requestBuilder = mock(ServerHttpRequest.Builder.class);
+        when(request.mutate()).thenReturn(requestBuilder);
+        when(requestBuilder.headers(any())).thenReturn(requestBuilder);
+        when(requestBuilder.build()).thenReturn(request);
+
+        ServerWebExchange.Builder exchangeBuilder = mock(ServerWebExchange.Builder.class);
+        when(exchange.mutate()).thenReturn(exchangeBuilder);
+        when(exchangeBuilder.request(any(ServerHttpRequest.class))).thenReturn(exchangeBuilder);
+        when(exchangeBuilder.build()).thenReturn(exchange);
     }
  
     @Test

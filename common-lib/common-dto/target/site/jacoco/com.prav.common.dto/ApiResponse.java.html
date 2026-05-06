@@ -14,7 +14,7 @@ public class ApiResponse&lt;T&gt; {
 
 <span class="fc" id="L15">    private boolean success;</span>
 <span class="fc" id="L16">    private String message;</span>
-<span class="fc" id="L17">    private T data;</span>
+<span class="fc" id="L17">    private T data; </span>
     @Builder.Default
 <span class="pc" id="L19">    private LocalDateTime timestamp = LocalDateTime.now();</span>
 
@@ -22,7 +22,7 @@ public class ApiResponse&lt;T&gt; {
 <span class="nc" id="L22">        return ApiResponse.&lt;T&gt;builder()</span>
 <span class="nc" id="L23">                .success(true)</span>
 <span class="nc" id="L24">                .message(&quot;Success&quot;)</span>
-<span class="nc" id="L25">                .data(data)</span>
+<span class="nc" id="L25">                .data(data) </span>
 <span class="nc" id="L26">                .build();</span>
     }
 

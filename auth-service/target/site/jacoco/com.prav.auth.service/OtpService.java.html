@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OtpService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Auth Service</a> &gt; <a href="index.source.html" class="el_package">com.prav.auth.service</a> &gt; <span class="el_source">OtpService.java</span></div><h1>OtpService.java</h1><pre class="source lang-java linenums">package com.prav.auth.service;
+
+import com.prav.common.exception.ConflictException;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.stereotype.Service;
+
+import com.prav.auth.client.UserClient;
+
+@Service
+public class OtpService {
+ 
+<span class="fc" id="L20">    private static final Logger log = LoggerFactory.getLogger(OtpService.class);</span>
+<span class="fc" id="L21">    private static final java.security.SecureRandom secureRandom = new java.security.SecureRandom();</span>
+
+    private final JavaMailSender mailSender;
+    private final UserClient userClient;
+    private final String fromEmail;
+    private final int expiryMinutes;
+    private final int otpLength;
+
+    public OtpService(
+            JavaMailSender mailSender,
+            UserClient userClient,
+            @Value(&quot;${spring.mail.username}&quot;) String fromEmail,
+            @Value(&quot;${otp.expiry.minutes:5}&quot;) int expiryMinutes,
+<span class="fc" id="L34">            @Value(&quot;${otp.length:6}&quot;) int otpLength) {</span>
+<span class="fc" id="L35">        this.mailSender = mailSender;</span>
+<span class="fc" id="L36">        this.userClient = userClient;</span>
+<span class="fc" id="L37">        this.fromEmail = fromEmail;</span>
+<span class="fc" id="L38">        this.expiryMinutes = expiryMinutes;</span>
+<span class="fc" id="L39">        this.otpLength = otpLength;</span>
+<span class="fc" id="L40">    }</span>
+
+    // In-memory OTP store — key: email, value: OtpEntry
+<span class="fc" id="L43">    private final Map&lt;String, OtpEntry&gt; otpStore = new HashMap&lt;&gt;();</span>
+
+    // ========== SIGNUP OTP ==========
+
+    public String generateSignupOtp(String email, String username, String password) {
+        // ✅ Check duplicate email via Feign — user-service has the DB
+        try {
+<span class="fc" id="L50">            Object existing = userClient.getUserByEmail(email);</span>
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">            if (existing != null) {</span>
+<span class="fc" id="L52">                throw new ConflictException(&quot;Email already registered: &quot; + email);</span>
+            }
+<span class="fc" id="L54">        } catch (ConflictException e) {</span>
+<span class="fc" id="L55">            throw e;</span>
+<span class="fc" id="L56">        } catch (Exception e) {</span>
+            // 404 means email not found — that's good, proceed
+<span class="pc bpc" id="L58" title="2 of 6 branches missed.">            if (e.getMessage() != null &amp;&amp; !e.getMessage().contains(&quot;404&quot;) &amp;&amp; !e.getMessage().contains(&quot;Not Found&quot;)) {</span>
+                // user-service might be down, log warning but allow signup
+<span class="fc" id="L60">                log.info(&quot;  [WARN] Could not check duplicate email (user-service may be down): {}&quot;, e.getMessage());</span>
+            }
+<span class="nc" id="L62">        }</span>
+
+        // Generate OTP
+<span class="fc" id="L65">        String otp = generateOtp();</span>
+
+        // ✅ Print OTP to console
+<span class="fc" id="L68">        log.info(&quot;\n╔════════════════════════════════════════════╗&quot;);</span>
+<span class="fc" id="L69">        log.info(&quot;  📧 OTP for {} : {}&quot;, email, otp);</span>
+<span class="fc" id="L70">        log.info(&quot;╚════════════════════════════════════════════╝\n&quot;);</span>
+
+        // ✅ Store OTP — using otpStore, not otpCache
+<span class="fc" id="L73">        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(expiryMinutes);</span>
+<span class="fc" id="L74">        otpStore.put(email, new OtpEntry(otp, expiresAt, username, password, &quot;SIGNUP&quot;));</span>
+
+        // ✅ Send email with correct 3-arg method
+        try {
+<span class="fc" id="L78">            sendOtpEmail(email, otp, &quot;Your Pizza App Signup OTP&quot;);</span>
+<span class="fc" id="L79">        } catch (Exception e) {</span>
+<span class="fc" id="L80">            log.info(&quot;  [WARN] Email send failed (OTP still valid in console): {}&quot;, e.getMessage());</span>
+<span class="fc" id="L81">        }</span>
+
+<span class="fc" id="L83">        return otp;</span>
+    }
+
+    public SignupData verifySignupOtp(String email, String otp) {
+<span class="fc" id="L87">        OtpEntry entry = otpStore.get(email);</span>
+
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        if (entry == null) {</span>
+<span class="fc" id="L90">            throw new RuntimeException(&quot;No OTP requested for this email&quot;);</span>
+        }
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        if (!&quot;SIGNUP&quot;.equals(entry.purpose)) {</span>
+<span class="fc" id="L93">            throw new RuntimeException(&quot;Invalid OTP purpose&quot;);</span>
+        }
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        if (entry.expiresAt.isBefore(LocalDateTime.now())) {</span>
+<span class="fc" id="L96">            otpStore.remove(email);</span>
+<span class="fc" id="L97">            throw new RuntimeException(&quot;OTP expired. Please request a new one&quot;);</span>
+        }
+<span class="fc bfc" id="L99" title="All 2 branches covered.">        if (!entry.otp.equals(otp)) {</span>
+<span class="fc" id="L100">            throw new RuntimeException(&quot;Invalid OTP&quot;);</span>
+        }
+
+        // Valid — return pending data and remove entry
+<span class="fc" id="L104">        otpStore.remove(email);</span>
+<span class="fc" id="L105">        return new SignupData(entry.username, entry.password, email);</span>
+    }
+
+    // ========== LOGIN OTP ==========
+
+    public void generateLoginOtp(String email) {
+<span class="fc" id="L111">        String otp = generateOtp();</span>
+<span class="fc" id="L112">        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(expiryMinutes);</span>
+
+<span class="fc" id="L114">        otpStore.put(email, new OtpEntry(otp, expiresAt, null, null, &quot;LOGIN&quot;));</span>
+
+        // ✅ Print login OTP to console too
+<span class="fc" id="L117">        log.info(&quot;\n╔════════════════════════════════════════════╗&quot;);</span>
+<span class="fc" id="L118">        log.info(&quot;  📧 LOGIN OTP for {} : {}&quot;, email, otp);</span>
+<span class="fc" id="L119">        log.info(&quot;╚════════════════════════════════════════════╝\n&quot;);</span>
+
+<span class="fc" id="L121">        sendOtpEmail(email, otp, &quot;Your Pizza App Login OTP&quot;);</span>
+<span class="fc" id="L122">    }</span>
+
+    public void verifyLoginOtp(String email, String otp) {
+<span class="fc" id="L125">        OtpEntry entry = otpStore.get(email);</span>
+
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">        if (entry == null) {</span>
+<span class="nc" id="L128">            throw new RuntimeException(&quot;No OTP requested for this email&quot;);</span>
+        }
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">        if (!&quot;LOGIN&quot;.equals(entry.purpose)) {</span>
+<span class="nc" id="L131">            throw new RuntimeException(&quot;Invalid OTP purpose&quot;);</span>
+        }
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">        if (entry.expiresAt.isBefore(LocalDateTime.now())) {</span>
+<span class="nc" id="L134">            otpStore.remove(email);</span>
+<span class="nc" id="L135">            throw new RuntimeException(&quot;OTP expired. Please request a new one&quot;);</span>
+        }
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">        if (!entry.otp.equals(otp)) {</span>
+<span class="nc" id="L138">            throw new RuntimeException(&quot;Invalid OTP&quot;);</span>
+        }
+
+        // Valid — remove entry
+<span class="fc" id="L142">        otpStore.remove(email);</span>
+<span class="fc" id="L143">    }</span>
+
+    // ========== HELPERS ==========
+
+    private String generateOtp() {
+<span class="fc" id="L148">        StringBuilder sb = new StringBuilder();</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">        for (int i = 0; i &lt; otpLength; i++) {</span>
+<span class="fc" id="L150">            sb.append(secureRandom.nextInt(10));</span>
+        }
+<span class="fc" id="L152">        return sb.toString();</span>
+    }
+
+    private void sendOtpEmail(String toEmail, String otp, String subject) {
+<span class="fc" id="L156">        SimpleMailMessage message = new SimpleMailMessage();</span>
+<span class="fc" id="L157">        message.setFrom(fromEmail);</span>
+<span class="fc" id="L158">        message.setTo(toEmail);</span>
+<span class="fc" id="L159">        message.setSubject(subject);</span>
+<span class="fc" id="L160">        message.setText(&quot;Your OTP is: &quot; + otp + &quot;\n\n&quot;</span>
+                + &quot;This OTP expires in &quot; + expiryMinutes + &quot; minutes.\n&quot;
+                + &quot;Do not share this OTP with anyone.&quot;);
+<span class="fc" id="L163">        mailSender.send(message);</span>
+<span class="fc" id="L164">    }</span>
+
+    // ========== Inner classes ==========
+
+    private static class OtpEntry {
+        String otp;
+        LocalDateTime expiresAt;
+        String username;
+        String password;
+        String purpose; // SIGNUP or LOGIN
+
+<span class="fc" id="L175">        OtpEntry(String otp, LocalDateTime expiresAt, String username, String password, String purpose) {</span>
+<span class="fc" id="L176">            this.otp = otp;</span>
+<span class="fc" id="L177">            this.expiresAt = expiresAt;</span>
+<span class="fc" id="L178">            this.username = username;</span>
+<span class="fc" id="L179">            this.password = password;</span>
+<span class="fc" id="L180">            this.purpose = purpose;</span>
+<span class="fc" id="L181">        }</span>
+    }
+
+    public static class SignupData {
+        private final String username;
+        private final String password;
+        private final String email;
+
+<span class="fc" id="L189">        public SignupData(String username, String password, String email) {</span>
+<span class="fc" id="L190">            this.username = username;</span>
+<span class="fc" id="L191">            this.password = password;</span>
+<span class="fc" id="L192">            this.email = email;</span>
+<span class="fc" id="L193">        }</span>
+
+<span class="fc" id="L195">        public String getUsername() { return username; }</span>
+<span class="fc" id="L196">        public String getPassword() { return password; }</span>
+<span class="fc" id="L197">        public String getEmail() { return email; }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

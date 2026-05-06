@@ -242,4 +242,56 @@ public class UserServiceApplicationTests {
 
         assertThrows(RuntimeException.class, () -> userService.demoteToUser(99L));
     }
+
+    // getAllUsers
+
+    @Test
+    void testGetAllUsers() {
+        when(userRepo.findAll()).thenReturn(List.of(sampleUser));
+        List<User> users = userService.getAllUsers();
+        assertEquals(1, users.size());
+        assertEquals("john", users.get(0).getUsername());
+    }
+
+    // toggleBanUser
+
+    @Test
+    void testToggleBanUser_Success() {
+        when(userRepo.findById(1L)).thenReturn(Optional.of(sampleUser));
+        when(userRepo.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        assertFalse(sampleUser.isBanned());
+
+        User result = userService.toggleBanUser(1L);
+
+        assertTrue(result.isBanned());
+        verify(userRepo).save(any(User.class));
+    }
+
+    @Test
+    void testToggleBanUser_NotFound() {
+        when(userRepo.findById(99L)).thenReturn(Optional.empty());
+        assertThrows(RuntimeException.class, () -> userService.toggleBanUser(99L));
+    }
+
+    // toggleBanRestaurant
+
+    @Test
+    void testToggleBanRestaurant_Success() {
+        when(restaurantRepo.findById(1L)).thenReturn(Optional.of(sampleRestaurant));
+        when(restaurantRepo.save(any(Restaurant.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        assertFalse(sampleRestaurant.isBanned());
+
+        Restaurant result = userService.toggleBanRestaurant(1L);
+
+        assertTrue(result.isBanned());
+        verify(restaurantRepo).save(any(Restaurant.class));
+    }
+
+    @Test
+    void testToggleBanRestaurant_NotFound() {
+        when(restaurantRepo.findById(99L)).thenReturn(Optional.empty());
+        assertThrows(RuntimeException.class, () -> userService.toggleBanRestaurant(99L));
+    }
 }

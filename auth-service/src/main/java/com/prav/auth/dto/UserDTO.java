@@ -11,6 +11,15 @@ public class UserDTO {
     private String role;
     private Long assignedRestaurantId;
     private List<Long> knownRestaurantIds;
+    private boolean isBanned;
+
+    public boolean isBanned() {
+        return isBanned;
+    }
+
+    public void setBanned(boolean isBanned) {
+        this.isBanned = isBanned;
+    }
     
     public UserDTO() {}
 

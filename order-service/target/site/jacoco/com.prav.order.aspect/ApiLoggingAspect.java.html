@@ -26,8 +26,8 @@ import java.util.Map;
 <span class="fc" id="L26">    private static final Logger log = LoggerFactory.getLogger(ApiLoggingAspect.class);</span>
 <span class="fc" id="L27">    private final ObjectMapper objectMapper = new ObjectMapper();</span>
 
-    private static final String BORDER = &quot;╔══════════════════════════════════════════════════════════════&quot;;
-    private static final String BORDER_END = &quot;╚══════════════════════════════════════════════════════════════&quot;;
+    private static final String BORDER = &quot;═════════════════════════════════════════════════════════════&quot;;
+    private static final String BORDER_END = &quot;═════════════════════════════════════════════════════════════&quot;;
 
     @Pointcut(&quot;within(@org.springframework.web.bind.annotation.RestController *)&quot;)
 <span class="nc" id="L33">    public void controllerMethods() {}</span>

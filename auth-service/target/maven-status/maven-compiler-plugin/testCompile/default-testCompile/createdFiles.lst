@@ -1,0 +1,12 @@
+com\prav\auth\client\UserClientFallbackFactoryTest.class
+com\prav\auth\model\ModelCoverageTest.class
+com\prav\auth\exception\ExceptionCoverageTest.class
+com\prav\auth\util\JwtUtilTest.class
+com\prav\auth\service\AuthServiceTest.class
+com\prav\auth\config\SecurityConfigTest.class
+com\prav\auth\dto\AuthRequestValidationTest.class
+com\prav\auth\dto\DTOCoverageTest.class
+com\prav\auth\controller\AuthControllerTest.class
+com\prav\auth\service\OtpServiceTest.class
+com\prav\auth\aspect\ApiLoggingAspectTest.class
+com\prav\auth\client\ClientCoverageTest.class
