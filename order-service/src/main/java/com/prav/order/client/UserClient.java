@@ -10,4 +10,7 @@ public interface UserClient {
 
     @GetMapping("/users/internal/{id}")
     UserDTO getUserById(@PathVariable Long id);
+
+    @GetMapping("/users/internal/restaurant/{id}")
+    com.prav.order.dto.RestaurantDTO getRestaurantById(@PathVariable("id") Long id);
 }

@@ -79,6 +79,12 @@ public class UserController {
         return convertToDTO(user);
     }
 
+    @GetMapping("/internal/restaurant/{id}")
+    public Restaurant getRestaurantById(@PathVariable Long id) {
+        return restaurantRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Restaurant not found: " + id));
+    }
+
     //PUBLIC — Get All Restaurants 
 
     @GetMapping("/public/restaurants")

@@ -3,6 +3,7 @@ package com.prav.order.service;
 import com.prav.common.exception.BadRequestException;
 import com.prav.common.exception.ResourceNotFoundException;
 import com.prav.order.client.PizzaClient;
+import com.prav.order.client.UserClient;
 import com.prav.order.dto.*;
 import com.prav.order.model.Order;
 import com.prav.order.model.OrderItem;
@@ -32,6 +33,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepo;
     private final OrderItemRepository orderItemRepo;
     private final PizzaClient pizzaClient;
+    private final UserClient userClient;
     private final RazorpayPaymentService paymentService;
     private final String paymentMode;
 
@@ -39,11 +41,13 @@ public class OrderServiceImpl implements OrderService {
             OrderRepository orderRepo,
             OrderItemRepository orderItemRepo,
             PizzaClient pizzaClient,
+            UserClient userClient,
             RazorpayPaymentService paymentService,
             @Value("${payment.mode:dummy}") String paymentMode) {
         this.orderRepo = orderRepo;
         this.orderItemRepo = orderItemRepo;
         this.pizzaClient = pizzaClient;
+        this.userClient = userClient;
         this.paymentService = paymentService;
         this.paymentMode = paymentMode;
     }
@@ -54,6 +58,16 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponseDTO placeOrder(Long userId, Long restaurantId, String deliveryAddress, String paymentMethod, List<Map<String, Object>> items) {
         log.info("  [ORDER] Placing order for user: {}, restaurant: {}", userId, restaurantId);
+
+        // Check if restaurant is banned
+        try {
+            RestaurantDTO restaurant = userClient.getRestaurantById(restaurantId);
+            if (restaurant != null && restaurant.isBanned()) {
+                throw new BadRequestException("Restaurant '" + restaurant.getName() + "' is currently suspended and not accepting orders.");
+            }
+        } catch (Exception e) {
+            log.warn("Could not verify restaurant status: {}", e.getMessage());
+        }
 
         BigDecimal totalAmount = BigDecimal.ZERO;
         List<OrderItem> orderItems = new ArrayList<>();
